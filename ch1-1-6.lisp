@@ -65,3 +65,10 @@
 (sum-of-two-larger-square 2 3 1)
 (sum-of-two-larger-square 3 1 2)
 (sum-of-two-larger-square 3 2 1)
+
+;; Exercise 1.4
+(defun a-plus-abs-b (a b)
+  (funcall (if (> b 0) #'+ #'-) a b))
+
+(a-plus-abs-b 1 2)
+(a-plus-abs-b 1 -2)
