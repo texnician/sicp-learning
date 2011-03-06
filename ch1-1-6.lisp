@@ -96,19 +96,19 @@
   (sqrt-iter 1.0 x))
 
 (defun good-enough2p (diff)
-  (< diff 0.001))
+  (< (abs diff) 0.001))
 
 
 (defun sqrt-iter2 (guess x)
   (format t "~f " guess)
   (if (good-enough2p (- (improve guess x) guess))
       guess
-      (sqrt-iter (improve guess x)
-                 x)))
+      (sqrt-iter2 (improve guess x)
+                  x)))
 
 (defun sqrt2 (x)
   (sqrt-iter2 1.0 x))
 
-(sqrt1 100000)
+;(sqrt1 100000)
 
-(sqrt2 10000)
+;(sqrt2 10000)
