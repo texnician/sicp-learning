@@ -72,3 +72,43 @@
 
 (a-plus-abs-b 1 2)
 (a-plus-abs-b 1 -2)
+
+(/ 3 2)
+
+;; Exercise 1.7
+(defun sqrt-iter (guess x)
+  (format t "~f " guess)
+  (if (good-enoughp guess x)
+      guess
+      (sqrt-iter (improve guess x)
+                 x)))
+
+(defun improve (guess x)
+  (average guess (/ x guess)))
+
+(defun average (x y)
+  (/ (+ x y) 2))
+
+(defun good-enoughp (guess x)
+  (< (abs (- (square guess) x)) 0.001))
+
+(defun sqrt1 (x)
+  (sqrt-iter 1.0 x))
+
+(defun good-enough2p (diff)
+  (< diff 0.001))
+
+
+(defun sqrt-iter2 (guess x)
+  (format t "~f " guess)
+  (if (good-enough2p (- (improve guess x) guess))
+      guess
+      (sqrt-iter (improve guess x)
+                 x)))
+
+(defun sqrt2 (x)
+  (sqrt-iter2 1.0 x))
+
+(sqrt1 100000)
+
+(sqrt2 10000)
