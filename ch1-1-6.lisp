@@ -508,7 +508,6 @@
 ;; prediction? Is your result compatible with the notion that programs on your
 ;; machine run in time proportional to the number of steps required for the
 ;; computation?
-
 (defun primep (n)
   (eq (smallest-divisor n) n))
 
@@ -523,15 +522,18 @@
 (defun report-prime (elapsed-time)
   (format t " *** ~d" elapsed-time))
 
-(timed-prime-test 1009)
-(timed-prime-test 1013)
-(timed-prime-test 1019)
-(timed-prime-test 10007)
-(timed-prime-test 10009)
-(timed-prime-test 10037)
-(timed-prime-test 100003)
-(timed-prime-test 100019)
-(timed-prime-test 100043)
-(timed-prime-test 1000003)
-(timed-prime-test 1000033)
-(timed-prime-test 1000037)
+;; (timed-prime-test 1009)
+;; (timed-prime-test 1013)
+;; (timed-prime-test 1019)
+;; (timed-prime-test 10007)
+;; (timed-prime-test 10009)
+;; (timed-prime-test 10037)
+;; (timed-prime-test 100003)
+;; (timed-prime-test 100019)
+;; (timed-prime-test 100043)
+;; (timed-prime-test 1000003)
+;; (timed-prime-test 1000033)
+;; (timed-prime-test 1000037)
+;; (timed-prime-test 10000019)
+;; (timed-prime-test 10000079)
+;; (timed-prime-test 10000103)
