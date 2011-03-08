@@ -423,3 +423,115 @@
                           p
                           q
                           (1- count)))))
+
+;; Exercise 1.20.  The process that a procedure generates is of course dependent
+;; on the rules used by the interpreter. As an example, consider the iterative
+;; gcd procedure given above. Suppose we were to interpret this procedure using
+;; normal-order evaluation, as discussed in section 1.1.5. (The
+;; normal-order-evaluation rule for if is described in exercise 1.5.) Using the
+;; substitution method (for normal order), illustrate the process generated in
+;; evaluating (gcd 206 40) and indicate the remainder operations that are
+;; actually performed. How many remainder operations are actually performed in
+;; the normal-order evaluation of (gcd 206 40)? In the applicative-order
+;; evaluation?
+(defun gcd1 (a b)
+  (if (eq 0 b)
+      a
+      (gcd1 b (mod a b))))
+
+(gcd1 206 40)
+;; Normal-order
+(gcd1 40 (mod 206 40))                  ; 0 + 1
+(gcd1 (mod 206 40) (mod 40 (mod 206 40))) ; 1 + 1 = 2
+(gcd1 (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40)))) ; 2 + 1 + 1 = 4
+(gcd1 (mod (mod 206 40) (mod 40 (mod 206 40))) (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40))))) ; 4 + 2 + 1 = 7
+(mod (mod 206 40) (mod 40 (mod 206 40))) ; 4
+2
+;; (+ 1 2 4 7 4) => 18 times
+
+;; Applicative-order
+(gcd1 40 (mod 206 40))
+(gcd1 40 6)
+(gcd1 6 (mod 40 6))
+(gcd1 6 4)
+(gcd1 4 (mod 6 4))
+(gcd1 4 2)
+(gcd1 2 (mod 4 2))
+(gcd1 2 0)
+2
+
+;; 4 times.
+
+;; Exercise 1.21.  Use the smallest-divisor procedure to find the smallest
+;; divisor of each of the following numbers: 199, 1999, 19999.
+(defun smallest-divisor (n)
+  (find-divisor n 2))
+
+(defun find-divisor (n test-divisor)
+  (cond ((devidesp n test-divisor) test-divisor)
+        ((> (square test-divisor) n) n)
+        (t (find-divisor n (1+ test-divisor)))))
+
+(defun devidesp (n d)
+  (eq 0 (mod n d)))
+
+(smallest-divisor 199)
+(smallest-divisor 1999)
+(smallest-divisor 19999)
+
+;; Exercise 1.22.  Most Lisp implementations include a primitive called runtime
+;; that returns an integer that specifies the amount of time the system has been
+;; running (measured, for example, in microseconds). The following
+;; timed-prime-test procedure, when called with an integer n, prints n and
+;; checks to see if n is prime. If n is prime, the procedure prints three
+;; asterisks followed by the amount of time used in performing the test.
+
+;; (define (timed-prime-test n)
+;;   (newline)
+;;   (display n)
+;;   (start-prime-test n (runtime)))
+;; (define (start-prime-test n start-time)
+;;   (if (prime? n)
+;;       (report-prime (- (runtime) start-time))))
+;; (define (report-prime elapsed-time)
+;;   (display " *** ")
+;;   (display elapsed-time))
+
+;; Using this procedure, write a procedure search-for-primes that checks the
+;; primality of consecutive odd integers in a specified range. Use your
+;; procedure to find the three smallest primes larger than 1000; larger than
+;; 10,000; larger than 100,000; larger than 1,000,000. Note the time needed to
+;; test each prime. Since the testing algorithm has order of growth of (n), you
+;; should expect that testing for primes around 10,000 should take about 10
+;; times as long as testing for primes around 1000. Do your timing data bear
+;; this out? How well do the data for 100,000 and 1,000,000 support the n
+;; prediction? Is your result compatible with the notion that programs on your
+;; machine run in time proportional to the number of steps required for the
+;; computation?
+
+(defun primep (n)
+  (eq (smallest-divisor n) n))
+
+(defun timed-prime-test (n)
+  (format t "~d" n)
+  (start-prime-test n (get-internal-run-time)))
+
+(defun start-prime-test (n start-time)
+  (if (primep n)
+      (report-prime (- (get-internal-run-time) start-time))))
+
+(defun report-prime (elapsed-time)
+  (format t " *** ~d" elapsed-time))
+
+(timed-prime-test 1009)
+(timed-prime-test 1013)
+(timed-prime-test 1019)
+(timed-prime-test 10007)
+(timed-prime-test 10009)
+(timed-prime-test 10037)
+(timed-prime-test 100003)
+(timed-prime-test 100019)
+(timed-prime-test 100043)
+(timed-prime-test 1000003)
+(timed-prime-test 1000033)
+(timed-prime-test 1000037)
