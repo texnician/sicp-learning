@@ -109,6 +109,148 @@
 (defun sqrt2 (x)
   (sqrt-iter2 1.0 x))
 
-;(sqrt1 100000)
+;; Exercise 1.9
+(defun add1 (a b)
+  (if (eq a 0)
+      b
+      (1+ (add1 (1- a) b))))
 
-;(sqrt2 10000)
+(add1 4 5)
+(1+ (add1 3 5))
+(1+ (1+ (add1 2 5)))
+(1+ (1+ (1+ (add1 1 5))))
+(1+ (1+ (1+ (1+ (add1 0 5)))))
+(1+ (1+ (1+ (1+ 5))))
+(1+ (1+ (1+ 6)))
+(1+ (1+ 7))
+(1+ 8)
+9
+
+(defun add2 (a b)
+  (if (eq a 0)
+      b
+      (add2 (1- a) (1+ b))))
+(add2 4 5)
+(add2 3 6)
+(add2 2 7)
+(add2 1 8)
+(add2 0 9)
+9
+
+;; Exercise 1.10
+(defun A (x y)
+  (cond ((eq y 0) 0)
+        ((eq x 0) (* 2 y))
+        ((eq y 1) 2)
+        (t (A (1- x)
+              (A x (1- y))))))
+
+(A 1 10)
+(A 0 (A 1 9))
+(A 0 (A 0 (A 1 8)))
+(A 0 (A 0 (A 0 (A 1 7))))
+(A 0 (A 0 (A 0 (A 0 (A 1 6)))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 1 5))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 1 4)))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 1 3))))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 1 2)))))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 1 1))))))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 2)))))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 4))))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 0 8)))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 16))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 32)))))
+(A 0 (A 0 (A 0 (A 0 64))))
+(A 0 (A 0 (A 0 128)))
+(A 0 (A 0 256))
+(A 0 512)
+1024
+
+(A 2 4)
+(A 1 (A 2 3))
+(A 1 (A 1 (A 2 2)))
+(A 1 (A 1 (A 1 (A 2 1))))
+(A 1 (A 1 (A 1 2)))
+(A 1 (A 1 (A 0 (A 1 1))))
+(A 1 (A 1 (A 0 2)))
+(A 1 (A 1 4))
+(A 1 (A 0 (A 1 3)))
+(A 1 (A 0 (A 0 (A 1 2))))
+(A 1 (A 0 (A 0 (A 0 (A 1 1)))))
+(A 1 (A 0 (A 0 (A 0 2))))
+(A 1 (A 0 (A 0 4)))
+(A 1 (A 0 8))
+(A 1 16)
+(A 0 (A 1 15))
+(A 0 (A 0 (A 1 14)))
+(A 0 (A 0 (A 0 (A 1 13))))
+(A 0 (A 0 (A 0 (A 0 (A 1 12)))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 1 11))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 (A 1 10)))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 (A 0 1024))))))
+(A 0 (A 0 (A 0 (A 0 (A 0 2048)))))
+(A 0 (A 0 (A 0 (A 0 4096))))
+(A 0 (A 0 (A 0 8192)))
+(A 0 (A 0 16384))
+(A 0 32768)
+65536
+
+(A 3 3)
+(A 2 (A 3 2))
+(A 2 (A 2 (A 3 1)))
+(A 2 (A 2 2))
+(A 2 (A 1 (A 2 1)))
+(A 2 (A 1 2))
+(A 2 (A 0 (A 1 1)))
+(A 2 (A 0 2))
+(A 2 4)
+
+;; 2n
+(defun A-f (n)
+  (A 0 n))                              
+
+;; 2^n
+(defun A-g (n)
+  (A 1 n))
+
+;; 2_1^2_2^2_3..2_n
+(defun A-h (n)
+  (A 2 n))
+
+;; Exercise 1.11
+(defun fb3 (n)
+  (if (< n 3)
+      n
+      (+ (fb3 (- n 1))
+         (* 2 (fb3 (- n 2)))
+         (* 3 (fb3 (- n 3))))))
+(t
+(defun fb3-2 (n)
+  (fb3-iter 0 1 2 n))
+
+(defun fb3-iter (a b c count)
+  (if (eq count 0)
+       a
+       (fb3-iter b c (+ c (* 2 b) (* 3 a)) (1- count))))
+
+;; Exercise 1.12
+(defun pascal-triangle (n k)
+  (cond ((eq k 1) 1)
+        ((eq k n) 1)
+        (t (+ (pascal-triangle (1- n) (1- k))
+              (pascal-triangle (1- n) k)))))
+
+;; Exercise 1.16
+(defun expr-fast (b n)
+  (expr-fast-iter 1 b n))
+
+(defun expr-fast-iter (a b n)
+  (if (eq n 0)
+      a
+      (let ((acc (if (evenp n)
+                     a
+                     (* a b)))
+            (h (if (evenp n)
+                   (/ n 2)
+                   (/ (1- n) 2))))
+        (expr-fast-iter acc (square b) h))))
