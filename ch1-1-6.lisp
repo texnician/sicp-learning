@@ -475,9 +475,9 @@
 (defun devidesp (n d)
   (eq 0 (mod n d)))
 
-(smallest-divisor 199)
-(smallest-divisor 1999)
-(smallest-divisor 19999)
+;; (smallest-divisor 199)
+;; (smallest-divisor 1999)
+;; (smallest-divisor 19999)
 
 ;; Exercise 1.22.  Most Lisp implementations include a primitive called runtime
 ;; that returns an integer that specifies the amount of time the system has been
