@@ -704,7 +704,7 @@
 ;; signal is to have it return 0.
 
 
-(defun nontrivial-square (n p)
+(defun nontrivial-square-mod (n p)
   (labels ((test-nontrivial-square (x y)
              (cond ((eq x 1) (mod y p))
                    ((eq x (1- p)) (mod y p))
@@ -715,7 +715,7 @@
 (defun expmod1 (base exp m)
   (cond ((eq 0 exp) 1)
         ((evenp exp)
-         (mod (nontrivial-square (expmod1 base (/ exp 2) m) m) m))
+         (nontrivial-square-mod (expmod1 base (/ exp 2) m) m))
         (t (mod (* base (expmod1 base (1- exp) m)) m))))
 
 (defun miller-rabin-test (n)
@@ -724,7 +724,8 @@
     (try-it (random n))))
 
 (defun miller-rabin-primep (n &optional (times 10))
-  (cond ((eq 0 times) t)
+  (cond ((eq 0 times) t)(random 1)
+
         ((miller-rabin-test n) (miller-rabin-primep n (1- times)))
         (t nil)))
 
