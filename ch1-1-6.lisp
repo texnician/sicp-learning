@@ -440,26 +440,26 @@
       a
       (gcd1 b (mod a b))))
 
-(gcd1 206 40)
-;; Normal-order
-(gcd1 40 (mod 206 40))                  ; 0 + 1
-(gcd1 (mod 206 40) (mod 40 (mod 206 40))) ; 1 + 1 = 2
-(gcd1 (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40)))) ; 2 + 1 + 1 = 4
-(gcd1 (mod (mod 206 40) (mod 40 (mod 206 40))) (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40))))) ; 4 + 2 + 1 = 7
-(mod (mod 206 40) (mod 40 (mod 206 40))) ; 4
-2
-;; (+ 1 2 4 7 4) => 18 times
+;; (gcd1 206 40)
+;; ;; Normal-order
+;; (gcd1 40 (mod 206 40))                  ; 0 + 1
+;; (gcd1 (mod 206 40) (mod 40 (mod 206 40))) ; 1 + 1 = 2
+;; (gcd1 (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40)))) ; 2 + 1 + 1 = 4
+;; (gcd1 (mod (mod 206 40) (mod 40 (mod 206 40))) (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40))))) ; 4 + 2 + 1 = 7
+;; (mod (mod 206 40) (mod 40 (mod 206 40))) ; 4
+;; 2
+;; ;; (+ 1 2 4 7 4) => 18 times
 
 ;; Applicative-order
-(gcd1 40 (mod 206 40))
-(gcd1 40 6)
-(gcd1 6 (mod 40 6))
-(gcd1 6 4)
-(gcd1 4 (mod 6 4))
-(gcd1 4 2)
-(gcd1 2 (mod 4 2))
-(gcd1 2 0)
-2
+;; (gcd1 40 (mod 206 40))
+;; (gcd1 40 6)
+;; (gcd1 6 (mod 40 6))
+;; (gcd1 6 4)
+;; (gcd1 4 (mod 6 4))
+;; (gcd1 4 2)
+;; (gcd1 2 (mod 4 2))
+;; (gcd1 2 0)
+;; 2
 
 ;; 4 times.
 
