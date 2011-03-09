@@ -512,32 +512,32 @@
 (defun primep (n)
   (eq (smallest-divisor n) n))
 
-(defun timed-prime-test (n)
+(defun timed-prime-test (p n)
   (format t "~d" n)
-  (start-prime-test n (get-internal-run-time)))
+  (start-prime-test p n (get-internal-run-time)))
 
-(defun start-prime-test (n start-time)
-  (if (primep n)
+(defun start-prime-test (p n start-time)
+  (if (funcall p n)
       (report-prime (- (get-internal-run-time) start-time))))
 
 (defun report-prime (elapsed-time)
   (format t " *** ~d" elapsed-time))
 
-;; (timed-prime-test 1009)
-;; (timed-prime-test 1013)
-;; (timed-prime-test 1019)
-;; (timed-prime-test 10007)
-;; (timed-prime-test 10009)
-;; (timed-prime-test 10037)
-;; (timed-prime-test 100003)
-;; (timed-prime-test 100019)
-;; (timed-prime-test 100043)
-;; (timed-prime-test 1000003)
-;; (timed-prime-test 1000033)
-;; (timed-prime-test 1000037)
-;; (timed-prime-test 10000019)
-;; (timed-prime-test 10000079)
-;; (timed-prime-test 10000103)
+;; (timed-prime-test #'primep 1009)
+;; (timed-prime-test #'primep 1013)
+;; (time (timed-prime-test #'primep 1019))
+;; (timed-prime-test #'primep 10007)
+;; (timed-prime-test #'primep 10009)
+;; (time (timed-prime-test #'primep 10037))
+;; (timed-prime-test #'primep 100003)
+;; (timed-prime-test #'primep 100019)
+;; (time (timed-prime-test #'primep 100043))
+;; (timed-prime-test #'primep 1000003)
+;; (timed-prime-test #'primep 1000033)
+;; (time (timed-prime-test #'primep 1000037))
+;; (timed-prime-test #'primep 10000019)
+;; (timed-prime-test #'primep 10000079)
+;; (time (timed-prime-test #'primep 10000103))
 
 ;; Exercise 1.23.  The smallest-divisor procedure shown at the start of this
 ;; section does lots of needless testing: After it checks to see if the number
@@ -553,3 +553,200 @@
 ;; about twice as fast. Is this expectation confirmed? If not, what is the
 ;; observed ratio of the speeds of the two algorithms, and how do you explain
 ;; the fact that it is different from 2?
+(defun smallest-divisor-fast (n)
+  (find-divisor-fast n 2))
+
+(defun next-test-divisor (n)
+  (if (eq n 2)
+      3
+      (+ 2 n)))
+
+(defun find-divisor-fast (n test-divisor)
+  (cond ((devidesp n test-divisor) test-divisor)
+        ((> (square test-divisor) n) n)
+        (t (find-divisor n (next-test-divisor test-divisor)))))
+
+(defun fast-primep (n)
+  (eq (smallest-divisor-fast n) n))
+
+;; (timed-prime-test #'fast-primep 1009)
+;; (timed-prime-test #'fast-primep 1013)
+;; (time (timed-prime-test #'fast-primep 1019))
+;; (timed-prime-test #'fast-primep 10007)
+;; (timed-prime-test #'fast-primep 10009)
+;; (time (timed-prime-test #'fast-primep 10037))
+;; (timed-prime-test #'fast-primep 100003)
+;; (timed-prime-test #'fast-primep 100019)
+;; (time (timed-prime-test #'fast-primep 100043))
+;; (timed-prime-test #'fast-primep 1000003)
+;; (timed-prime-test #'fast-primep 1000033)
+;; (time (timed-prime-test #'fast-primep 1000037))
+;; (timed-prime-test #'fast-primep 10000019)
+;; (timed-prime-test #'fast-primep 10000079)
+;; (time (timed-prime-test #'fast-primep 10000103))
+
+;; Exercise 1.24.  Modify the timed-prime-test procedure of exercise 1.22 to use
+;; fast-prime? (the Fermat method), and test each of the 12 primes you found in
+;; that exercise. Since the Fermat test has (log n) growth, how would you expect
+;; the time to test primes near 1,000,000 to compare with the time needed to
+;; test primes near 1000? Do your data bear this out? Can you explain any
+;; discrepancy you find?
+(defun expmod (base exp m)
+  (cond ((eq 0 exp) 1)
+        ((evenp exp)
+         (mod (square (expmod base (/ exp 2) m)) m))
+        (t (mod (* base (expmod base (1- exp) m)) m))))
+
+
+(defun fermat-test (n)
+  (labels ((try-it (x)
+             (eq (expmod x n n) x)))
+    (funcall #'try-it (random n))))
+
+(defun fermat-primep (n &optional (times 10))
+  (cond ((eq 0 times) t)
+        ((fermat-test n) (fermat-primep n (1- times)))
+        (t nil)))
+
+;; (timed-prime-test #'fermat-primep 1009)
+;; (timed-prime-test #'fermat-primep 1013)
+;; (time (timed-prime-test #'fermat-primep 1019))
+;; (timed-prime-test #'fermat-primep 10007)
+;; (timed-prime-test #'fermat-primep 10009)
+;; (time (timed-prime-test #'fermat-primep 10037))
+;; (timed-prime-test #'fermat-primep 100003)
+;; (timed-prime-test #'fermat-primep 100019)
+;; (time (timed-prime-test #'fermat-primep 100043))
+;; (timed-prime-test #'fermat-primep 1000003)
+;; (timed-prime-test #'fermat-primep 1000033)
+;; (time (timed-prime-test #'fermat-primep 1000037))
+;; (timed-prime-test #'fermat-primep 10000019)
+;; (timed-prime-test #'fermat-primep 10000079)
+;; (time (timed-prime-test #'fermat-primep 10000103))
+
+;; Exercise 1.25.  Alyssa P. Hacker complains that we went to a lot of extra
+;; work in writing expmod. After all, she says, since we already know how to
+;; compute exponentials, we could have simply written
+
+;; (define (expmod base exp m)
+;;   (remainder (fast-expt base exp) m))
+
+;; Is she correct? Would this procedure serve as well for our fast prime tester?
+;; Explain.
+
+;; No, the (fast-expt base exp) is too large to process by computer.
+
+;; Exercise 1.26.  Louis Reasoner is having great difficulty doing exercise
+;; 1.24. His fast-prime? test seems to run more slowly than his prime?
+;; test. Louis calls his friend Eva Lu Ator over to help. When they examine
+;; Louis's code, they find that he has rewritten the expmod procedure to use an
+;; explicit multiplication, rather than calling square:
+
+;; (define (expmod base exp m)
+;;   (cond ((= exp 0) 1)
+;;         ((even? exp)
+;;          (remainder (* (expmod base (/ exp 2) m)
+;;                        (expmod base (/ exp 2) m))
+;;                     m))
+;;         (else
+;;          (remainder (* base (expmod base (- exp 1) m))
+;;                     m))))
+
+;; ``I don't see what difference that could make,'' says Louis. ``I do.'' says
+;; Eva. ``By writing the procedure like that, you have transformed the (log n)
+;; process into a (n) process.'' Explain.
+
+;; T(n) = log(n) + n = O(n)
+
+;; Exercise 1.27.  Demonstrate that the Carmichael numbers listed in footnote 47
+;; really do fool the Fermat test. That is, write a procedure that takes an
+;; integer n and tests whether an is congruent to a modulo n for every a<n, and
+;; try your procedure on the given Carmichael numbers.
+(defun test-carmichael-number (n)
+  (labels ((test-iter (a)
+             (cond ((eq a n) t)
+                   ((eq (expmod a n n) a) (test-iter (1+ a)))
+                   (t nil))))
+    (test-iter 2)))
+
+;; (test-carmichael-number 561)
+;; (test-carmichael-number 1105)
+;; (test-carmichael-number 1729)
+;; (test-carmichael-number 2465)
+;; (test-carmichael-number 2821)
+;; (test-carmichael-number 6601)
+
+;; (smallest-divisor 561)
+;; (smallest-divisor 1105)
+;; (smallest-divisor 1729)
+;; (smallest-divisor 2465)
+;; (smallest-divisor 2821)
+;; (smallest-divisor 6601)
+
+;; Exercise 1.28.  One variant of the Fermat test that cannot be fooled is
+;; called the Miller-Rabin test (Miller 1976; Rabin 1980). This starts from an
+;; alternate form of Fermat's Little Theorem, which states that if n is a prime
+;; number and a is any positive integer less than n, then a raised to the (n -
+;; 1)st power is congruent to 1 modulo n. To test the primality of a number n by
+;; the Miller-Rabin test, we pick a random number a<n and raise a to the (n -
+;; 1)st power modulo n using the expmod procedure. However, whenever we perform
+;; the squaring step in expmod, we check to see if we have discovered a
+;; ``nontrivial square root of 1 modulo n,'' that is, a number not equal to 1 or
+;; n - 1 whose square is equal to 1 modulo n. It is possible to prove that if
+;; such a nontrivial square root of 1 exists, then n is not prime. It is also
+;; possible to prove that if n is an odd number that is not prime, then, for at
+;; least half the numbers a<n, computing an-1 in this way will reveal a
+;; nontrivial square root of 1 modulo n. (This is why the Miller-Rabin test
+;; cannot be fooled.) Modify the expmod procedure to signal if it discovers a
+;; nontrivial square root of 1, and use this to implement the Miller-Rabin test
+;; with a procedure analogous to fermat-test. Check your procedure by testing
+;; various known primes and non-primes. Hint: One convenient way to make expmod
+;; signal is to have it return 0.
+
+
+(defun nontrivial-square (n p)
+  (labels ((test-nontrivial-square (x y)
+             (cond ((eq x 1) (mod y p))
+                   ((eq x (1- p)) (mod y p))
+                   ((eq (mod y p) 1) 0)
+                   (t (mod y p)))))
+    (test-nontrivial-square n (square n))))
+
+(defun expmod1 (base exp m)
+  (cond ((eq 0 exp) 1)
+        ((evenp exp)
+         (mod (nontrivial-square (expmod1 base (/ exp 2) m) m) m))
+        (t (mod (* base (expmod1 base (1- exp) m)) m))))
+
+(defun miller-rabin-test (n)
+  (labels ((try-it (x)
+             (eq (expmod1 x (1- n) n) 1)))
+    (try-it (random n))))
+
+(defun miller-rabin-primep (n &optional (times 10))
+  (cond ((eq 0 times) t)
+        ((miller-rabin-test n) (miller-rabin-primep n (1- times)))
+        (t nil)))
+
+;; (timed-prime-test #'miller-rabin-primep 561)
+;; (timed-prime-test #'miller-rabin-primep 1105)
+;; (timed-prime-test #'miller-rabin-primep 1729)
+;; (timed-prime-test #'miller-rabin-primep 2465)
+;; (timed-prime-test #'miller-rabin-primep 2821)
+;; (timed-prime-test #'miller-rabin-primep 6601)
+;; 
+;; (timed-prime-test #'miller-rabin-primep 1009)
+;; (timed-prime-test #'miller-rabin-primep 1013)
+;; (time (timed-prime-test #'miller-rabin-primep 1019))
+;; (timed-prime-test #'miller-rabin-primep 10007)
+;; (timed-prime-test #'miller-rabin-primep 10009)
+;; (time (timed-prime-test #'miller-rabin-primep 10037))
+;; (timed-prime-test #'miller-rabin-primep 100003)
+;; (timed-prime-test #'miller-rabin-primep 100019)
+;; (time (timed-prime-test #'miller-rabin-primep 100043))
+;; (timed-prime-test #'miller-rabin-primep 1000003)
+;; (timed-prime-test #'miller-rabin-primep 1000033)
+;; (time (timed-prime-test #'miller-rabin-primep 1000037))
+;; (timed-prime-test #'miller-rabin-primep 10000019)
+;; (timed-prime-test #'miller-rabin-primep 10000079)
+;; (time (timed-prime-test #'miller-rabin-primep 10000103))
