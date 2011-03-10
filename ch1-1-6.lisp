@@ -724,8 +724,7 @@
     (try-it (random n))))
 
 (defun miller-rabin-primep (n &optional (times 10))
-  (cond ((eq 0 times) t)(random 1)
-
+  (cond ((eq 0 times) t)
         ((miller-rabin-test n) (miller-rabin-primep n (1- times)))
         (t nil)))
 
@@ -751,3 +750,36 @@
 ;; (timed-prime-test #'miller-rabin-primep 10000019)
 ;; (timed-prime-test #'miller-rabin-primep 10000079)
 ;; (time (timed-prime-test #'miller-rabin-primep 10000103))
+
+;; Exercise 1.29.  Simpson's Rule is a more accurate method of numerical
+;; integration than the method illustrated above. Using Simpson's Rule, the
+;; integral of a function f between a and b is approximated as
+
+;; where h = (b - a)/n, for some even integer n, and yk = f(a + kh). (Increasing
+;; n increases the accuracy of the approximation.) Define a procedure that takes
+;; as arguments f, a, b, and n and returns the value of the integral, computed
+;; using Simpson's Rule. Use your procedure to integrate cube between 0 and 1
+;; (with n = 100 and n = 1000), and compare the results to those of the integral
+;; procedure shown above.
+(defun cube (x)
+  (* x x x))
+(defun simpson-integrate (f a b n)
+  (labels ((simpson-sum (h)
+             (labels ((next (k)
+                        (1+ k))
+                      (ak (k)
+                        (cond ((or (eq k 0) (eq k n)) 1)
+                              ((evenp k) 2)
+                              (t 4)))
+                      (yk (k)
+                        (funcall f (+ a (* k h))))
+                      (term (fa fy k)
+                        (* (funcall fa k) (funcall fy k)))
+                      (sum-iter (fterm fak fyk k)
+                        (if (> k n)
+                            0
+                            (+ (funcall fterm fak fyk k) (sum-iter fterm fak fyk (next k))))))
+               (/ (* h (sum-iter #'term #'ak #'yk 0)) 3.0))))
+    (simpson-sum (/ (- b a) n))))
+
+(simpson-integrate #'cube 0 1 100)
