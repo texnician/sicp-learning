@@ -855,3 +855,44 @@
   (labels ((fterm (k)
             (expt (/ (+ 2 k) (+ 3 k)) (expt -1 k))))
     (product #'fterm 0 #'1+ n)))
+
+;; Exercise 1.32.  a. Show that sum and product (exercise 1.31) are both special
+;; cases of a still more general notion called accumulate that combines a
+;; collection of terms, using some general accumulation function:
+
+;; (accumulate combiner null-value term a next b)
+
+;; Accumulate takes as arguments the same term and range specifications as sum
+;; and product, together with a combiner procedure (of two arguments) that
+;; specifies how the current term is to be combined with the accumulation of the
+;; preceding terms and a null-value that specifies what base value to use when
+;; the terms run out. Write accumulate and show how sum and product can both be
+;; defined as simple calls to accumulate.
+
+;; b. If your accumulate procedure generates a recursive process, write one that
+;; generates an iterative process. If it generates an iterative process, write
+;; one that generates a recursive process.
+
+(defun accumulate (combiner null-value term a next b)
+  (labels ((accumulate-iter (n)
+             (if (> n b)
+                 null-value
+                 (funcall combiner (funcall term n)
+                          (accumulate-iter (funcall next n))))))
+    (accumulate-iter a)))
+
+(defun accumulate-tail-recursive (combiner null-value term a next b)
+  (labels ((accumulate-iter (n acc)
+             (if (> n b)
+                 acc
+                 (accumulate-iter (funcall next n)
+                                  (funcall combiner (funcall term n) acc)))))
+    (accumulate-iter a null-value)))
+
+(defun general-sum (n)
+  (accumulate #'+ 0 #'(lambda (x) x) 1 #'1+ n))
+
+(defun general-wallis-product (n)
+  (labels ((fterm (k)
+            (expt (/ (+ 2 k) (+ 3 k)) (expt -1 k))))
+    (accumulate #'* 1 #'fterm 0 #'1+ n)))
