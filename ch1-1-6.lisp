@@ -896,3 +896,59 @@
   (labels ((fterm (k)
             (expt (/ (+ 2 k) (+ 3 k)) (expt -1 k))))
     (accumulate #'* 1 #'fterm 0 #'1+ n)))
+
+;; Exercise 1.33.  You can obtain an even more general version of accumulate
+;; (exercise 1.32) by introducing the notion of a filter on the terms to be
+;; combined. That is, combine only those terms derived from values in the range
+;; that satisfy a specified condition. The resulting filtered-accumulate
+;; abstraction takes the same arguments as accumulate, together with an
+;; additional predicate of one argument that specifies the filter. Write
+;; filtered-accumulate as a procedure. Show how to express the following using
+;; filtered-accumulate:
+
+;; a. the sum of the squares of the prime numbers in the interval a to b
+;; (assuming that you have a prime? predicate already written)
+
+;; b. the product of all the positive integers less than n that are relatively
+;; prime to n (i.e., all positive integers i < n such that GCD(i,n) = 1).
+(defun filtered-accumulate (combiner filterp null-value term a next b)
+  (labels ((accumulate-iter (n)
+             (if (> n b)
+                 null-value
+                 (funcall combiner
+                          (if (funcall filterp n)
+                              (funcall term n)
+                              null-value)
+                          (accumulate-iter (funcall next n))))))
+    (accumulate-iter a)))
+
+(defun filtered-accumulate-tail-recursive (combiner filterp null-value term a next b)
+  (labels ((accumulate-iter (n acc)
+             (if (> n b)
+                 acc
+                 (accumulate-iter (funcall next n)
+                                  (funcall combiner
+                                           (if (funcall filterp n)
+                                               (funcall term n)
+                                               null-value) acc)))))
+    (accumulate-iter a null-value)))
+
+(defun more-general-sum (n)
+  (filtered-accumulate #'+ #'(lambda (x) t) 0 #'(lambda (x) x) 1 #'1+ n))
+
+(defun more-general-wallis-product (n)
+  (labels ((fterm (k)
+            (expt (/ (+ 2 k) (+ 3 k)) (expt -1 k))))
+    (filtered-accumulate #'* #'(lambda (x) t) 1 #'fterm 0 #'1+ n)))
+
+;(more-general-sum 100)
+;(* 4.0 (more-general-wallis-product 5000))
+(defun sum-of-primer-square (a b)
+  (filtered-accumulate #'+ #'primep 0 #'square a #'1+ b))
+
+(defun products-of-relative-primer-to (n)
+  (filtered-accumulate #'* #'(lambda (x)
+                               (eq (gcd1 n x) 1))
+                       1 #'(lambda (x) x) 1 #'1+ (1- n)))
+
+; (eq (factorial (1- 17)) (products-of-relative-primer-to 17))
