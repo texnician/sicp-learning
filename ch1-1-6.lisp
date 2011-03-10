@@ -763,6 +763,7 @@
 ;; procedure shown above.
 (defun cube (x)
   (* x x x))
+
 (defun simpson-integrate (f a b n)
   (labels ((next (k)
              (1+ k))
@@ -782,4 +783,75 @@
                (/ (* h (sum-iter 0)) 3))))
     (simpson-sum (/ (- b a) n) #'term #'ak #'yk #'next)))
 
-(simpson-integrate #'cube 0 1 1000)
+;(simpson-integrate #'cube 0 1 1000)
+
+;; Exercise 1.30.  The sum procedure above generates a linear recursion. The
+;; procedure can be rewritten so that the sum is performed iteratively. Show how
+;; to do this by filling in the missing expressions in the following definition:
+
+;; (define (sum term a next b)
+;;   (define (iter a result)
+;;     (if (> a b)
+;;         result
+;;         (iter (next a) (+ (term a) result))))
+;;   (iter a 0))
+
+(defun simpson-integrate-tail-recursive (f a b n)
+  (labels ((next (k)
+             (1+ k))
+           (ak (k)
+             (cond ((or (eq k 0) (eq k n)) 1)
+                   ((evenp k) 2)
+                   (t 4)))
+           (yk (k h)
+             (funcall f (+ a (* k h))))
+           (term (fa fy k h)
+             (* (funcall fa k) (funcall fy k h)))
+           (simpson-sum (h fterm fak fyk fnext)
+             (labels ((sum-iter (k acc)
+                        (if (> k n)
+                            acc
+                            (sum-iter (funcall fnext k) (+ acc (funcall fterm fak fyk k h))))))
+               (/ (* h (sum-iter 0 0)) 3))))
+    (simpson-sum (/ (- b a) n) #'term #'ak #'yk #'next)))
+
+;(simpson-integrate-tail-recursive #'cube 0 1 1000)
+
+;; Exercise 1.31.
+;; a.  The sum procedure is only the simplest of a vast number of similar
+;; abstractions that can be captured as higher-order procedures.51 Write an
+;; analogous procedure called product that returns the product of the values of
+;; a function at points over a given range. Show how to define factorial in
+;; terms of product. Also use product to compute approximations to using the
+;; formula52
+
+;; b.  If your product procedure generates a recursive process, write one that
+;; generates an iterative process. If it generates an iterative process, write
+;; one that generates a recursive process.
+
+(defun product (fterm a fnext b)
+  (labels ((product-iter (n)
+             (if (> n b)
+                 1
+                 (* (funcall fterm n)
+                    (product-iter (funcall fnext n))))))
+    (product-iter a)))
+
+(defun product-tail-recursive (fterm a fnext b)
+  (labels ((product-iter (n acc)
+             (if (> n b)
+                 acc
+                 (product-iter (funcall fnext n)
+                               (* (funcall fterm n) acc)))))
+    (product-iter a 1)))
+
+
+(defun factorial (n)
+  (labels ((fterm (x)
+             x))
+    (product #'fterm 1 #'1+ n)))
+
+(defun wallis-product (n)
+  (labels ((fterm (k)
+            (expt (/ (+ 2 k) (+ 3 k)) (expt -1 k))))
+    (product #'fterm 0 #'1+ n)))
