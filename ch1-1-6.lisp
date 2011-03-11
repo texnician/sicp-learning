@@ -1202,3 +1202,48 @@
     (iter f 1)))
 
 ;; (funcall (repeated-proc #'square 2) 5)
+
+;; *Exercise 1.44:* The idea of "smoothing" a function is an important concept
+;; in signal processing.  If f is a function and dx is some small number, then
+;; the smoothed version of f is the function whose value at a point x is the
+;; average of f(x - dx), f(x), and f(x + dx).  Write a procedure `smooth' that
+;; takes as input a procedure that computes f and returns a procedure that
+;; computes the smoothed f.  It is sometimes valuable to repeatedly smooth a
+;; function (that is, smooth the smoothed function, and so on) to obtained the
+;; "n-fold smoothed function".  Show how to generate the n-fold smoothed
+;; function of any given function using `smooth' and `repeated' from *note
+;; Exercise 1-43::.
+(defun smooth (f)
+  (lambda (x)
+    (/ (+ (funcall f (+ x *dx*)) (funcall f x) (funcall f (- x *dx*))) 3)))
+
+(defun n-fold-smooth (f n)
+    (funcall (repeated-proc #'smooth n) f))
+
+;(funcall (n-fold-smooth #'sin 3) 0.5d0)
+
+;; *Exercise 1.45:* We saw in section *note 1-3-3:: that attempting to compute
+;; square roots by naively finding a fixed point of y |-> x/y does not converge,
+;; and that this can be fixed by average damping.  The same method works for
+;; finding cube roots as fixed points of the average-damped y |-> x/y^2.
+;; Unfortunately, the process does not work for fourth roots--a single average
+;; damp is not enough to make a fixed-point search for y |-> x/y^3 converge.  On
+;; the other hand, if we average damp twice (i.e., use the average damp of the
+;; average damp of y |-> x/y^3) the fixed-point search does converge.  Do some
+;; experiments to determine how many average damps are required to compute nth
+;; roots as a fixed-point search based upon repeated average damping of y |->
+;; x/y^(n-1).  Use this to implement a simple procedure for computing nth roots
+;; using `fixed-point', `average-damp', and the `repeated' procedure of *note
+;; Exercise 1-43::.  Assume that any arithmetic operations you need are
+;; available as primitives.
+(defun average-damp (f)
+  (lambda (x)
+    (average (funcall f x) x)))
+
+(defun nth-root (x n)
+  (labels ((fy (y)
+             (/ x  (expt y (1- n)))))
+    ;; repeat i times, 2^i >= n
+    (fixed-point (funcall (repeated-proc #'average-damp (ceiling (log n 2)))
+                          #'fy)
+                 1.0d0)))
