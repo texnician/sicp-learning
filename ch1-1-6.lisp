@@ -103,13 +103,13 @@
   (/ (+ x y) 2))
 
 (defun good-enoughp (guess x)
-  (< (abs (- (square guess) x)) 0.001))
+  (< (abs (- (square guess) x)) 0.001L0))
 
 (defun sqrt1 (x)
   (sqrt-iter 1.0 x))
 
 (defun good-enough2p (diff)
-  (< (abs diff) 0.001))
+  (< (abs diff) 0.001L0))
 
 
 (defun sqrt-iter2 (guess x)
@@ -978,7 +978,7 @@
 ;; *Exercise 1.35:* Show that the golden ratio [phi] (section *note 1-2-2::) is
 ;; *a fixed point of the transformation x |-> 1 + 1/x, and use this fact to
 ;; *compute [phi] by means of the `fixed-point' procedure.
-(defparameter *tolerance* 0.00001)
+(defparameter *tolerance* 0.00001d0)
 
 (defun fixed-point (f first-guess)
   (labels ((close-enoughp (v1 v2)
@@ -990,7 +990,7 @@
                    (try next)))))
     (try first-guess)))
 
-;; (fixed-point #'(lambda (x) (+ 1 (/ 1 x))) 2.71828)
+;; (fixed-point #'(lambda (x) (+ 1 (/ 1 x))) 2.71828d0)
 
 ;; Exercise 1.36: Modify `fixed-point' so that it prints the sequence of
 ;; approximations it generates, using the `newline' and `display' primitives
@@ -1076,9 +1076,9 @@
                    (iter (1- x) (/ term-n (+ term-d acc)))))))
     (iter k 0)))
 
-;; (expt (/ (+ 1 (sqrt 5)) 2) -1)
-;; (eql (cont-frac #'(lambda (i) 1.0) #'(lambda (i) 1.0) 17)
-;;      (cont-frac-iterate #'(lambda (i) 1.0) #'(lambda (i) 1.0) 17))
+;; (expt (/ (+ 1 (sqrt 5.0L0)) 2) -1)
+;; (eql (cont-frac #'(lambda (i) 1.0D0) #'(lambda (i) 1.0D0) 17)
+;;      (cont-frac-iterate #'(lambda (i) 1.0L0) #'(lambda (i) 1.0L0) 17))
 
 ;; *Exercise 1.38:* In 1737, the Swiss mathematician Leonhard Euler published a
 ;; memoir `De Fractionibus Continuis', which included a continued fraction
@@ -1120,7 +1120,39 @@
                                x
                              neg-square-x))
                        #'(lambda (i)
-                           (+ 1.0 (* 2 (1- i))))
+                           (+ 1.0d0 (* 2 (1- i))))
                        k)))
 
-;; (tan-cf (* pi 1/4) 8)
+;; (tan-cf (* pi 7/4) 8)
+
+;; *Exercise 1.40:* Define a procedure `cubic' that can be used together with
+;; the `newtons-method' procedure in expressions of the form
+
+;;      (newtons-method (cubic a b c) 1)
+
+;; to approximate zeros of the cubic x^3 + ax^2 + bx + c.
+(defparameter *dx* 0.00001d0)
+
+(defun deriv (g)
+  (lambda (x)
+    (/ (- (funcall g (+ x *dx*)) (funcall g x))
+       *dx*)))
+
+;; (funcall (deriv #'cube) 5)
+
+
+;; *Exercise 1.41:* Define a procedure `double' that takes a procedure of one
+;; argument as argument and returns a procedure that applies the original
+;; procedure twice.  For example, if `inc' is a procedure that adds 1 to its
+;; argument, then `(double inc)' should be a procedure that adds 2.  What value
+;; is returned by
+
+;;      (((double (double double)) inc) 5)
+
+;; *Exercise 1.42:* Let f and g be two one-argument functions.  The
+;; "composition" f after g is defined to be the function x |-> f(g(x)).  Define
+;; a procedure `compose' that implements composition.  For example, if `inc' is
+;; a procedure that adds 1 to its argument,
+
+;;      ((compose square inc) 6)
+;;      49
