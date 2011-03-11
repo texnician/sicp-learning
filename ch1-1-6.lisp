@@ -1233,9 +1233,10 @@
 ;; experiments to determine how many average damps are required to compute nth
 ;; roots as a fixed-point search based upon repeated average damping of y |->
 ;; x/y^(n-1).  Use this to implement a simple procedure for computing nth roots
-;; using `fixed-point', `average-damp', and the `repeated' procedure of *note
-;; Exercise 1-43::.  Assume that any arithmetic operations you need are
+;; using `fixed-point', `average-damp', and the `repeated' procedure of
+;; *notExercise 1-43 Assume that any arithmetic operations you need are
 ;; available as primitives.
+
 (defun average-damp (f)
   (lambda (x)
     (average (funcall f x) x)))
