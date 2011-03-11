@@ -1198,8 +1198,7 @@
   (labels ((iter (g i)
              (if (eq i n)
                  g
-                 (iter #'(lambda (x)
-                           (funcall f (funcall g x))) (1+ i)))))
+                 (iter (compose-proc f g) (1+ i)))))
     (iter f 1)))
 
 ;; (funcall (repeated-proc #'square 2) 5)
