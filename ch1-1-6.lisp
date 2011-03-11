@@ -1139,7 +1139,17 @@
        *dx*)))
 
 ;; (funcall (deriv #'cube) 5)
+(defun newton-transform (g)
+  (lambda (x)
+    (- x (/ (funcall g x) (funcall (funcall #'deriv g) x)))))
 
+(defun newtons-method (g guess)
+  (fixed-point (newton-transform g) guess))
+
+(defun cubic (a b c)
+  (lambda (x) (+ (* a (expt x 3)) (* b (expt x 2)) c)))
+
+;; (funcall (cubic 3 7 11) (newtons-method (cubic 3 7 11) 1))
 
 ;; *Exercise 1.41:* Define a procedure `double' that takes a procedure of one
 ;; argument as argument and returns a procedure that applies the original
@@ -1149,6 +1159,13 @@
 
 ;;      (((double (double double)) inc) 5)
 
+(defun double-proc (g)
+  (lambda (x) (funcall g (funcall g x))))
+
+;; (funcall (double-proc #'1+) 0)
+;; (funcall (funcall (double-proc #'double-proc) #'1+) 0)
+;; (funcall (funcall (double-proc (double-proc #'double-proc)) #'1+) 0)
+
 ;; *Exercise 1.42:* Let f and g be two one-argument functions.  The
 ;; "composition" f after g is defined to be the function x |-> f(g(x)).  Define
 ;; a procedure `compose' that implements composition.  For example, if `inc' is
@@ -1156,3 +1173,33 @@
 
 ;;      ((compose square inc) 6)
 ;;      49
+
+(defun compose-proc (f g)
+  (lambda (x) (funcall f (funcall g x))))
+
+;; (funcall (compose-proc #'square #'1+) 6)
+
+;; *Exercise 1.43:* If f is a numerical function and n is a positive integer,
+;; then we can form the nth repeated application of f, which is defined to be
+;; the function whose value at x is f(f(...(f(x))...)).  For example, if f is
+;; the function x |-> x + 1, then the nth repeated application of f is the
+;; function x |-> x + n.  If f is the operation of squaring a number, then the
+;; nth repeated application of f is the function that raises its argument to the
+;; 2^nth power.  Write a procedure that takes as inputs a procedure that
+;; computes f and a positive integer n and returns the procedure that computes
+;; the nth repeated application of f.  Your procedure should be able to be used
+;; as follows:
+
+;;      ((repeated square 2) 5)
+;;      625
+
+;; Hint: You may find it convenient to use `compose' from *note Exercise 1-42::.
+(defun repeated-proc (f n)
+  (labels ((iter (g i)
+             (if (eq i n)
+                 g
+                 (iter #'(lambda (x)
+                           (funcall f (funcall g x))) (1+ i)))))
+    (iter f 1)))
+
+;; (funcall (repeated-proc #'square 2) 5)
