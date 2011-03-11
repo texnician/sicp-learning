@@ -1236,7 +1236,6 @@
 ;; using `fixed-point', `average-damp', and the `repeated' procedure of
 ;; *notExercise 1-43 Assume that any arithmetic operations you need are
 ;; available as primitives.
-
 (defun average-damp (f)
   (lambda (x)
     (average (funcall f x) x)))
@@ -1248,3 +1247,33 @@
     (fixed-point (funcall (repeated-proc #'average-damp (ceiling (log n 2)))
                           #'fy)
                  1.0d0)))
+
+;; *Exercise 1.46:* Several of the numerical methods described in this chapter
+;; are instances of an extremely general computational strategy known as
+;; "iterative improvement".  Iterative improvement says that, to compute
+;; something, we start with an initial guess for the answer, test if the guess
+;; is good enough, and otherwise improve the guess and continue the process
+;; using the improved guess as the new guess.  Write a procedure
+;; `iterative-improve' that takes two procedures as arguments: a method for
+;; telling whether a guess is good enough and a method for improving a guess.
+;; `Iterative-improve' should return as its value a procedure that takes a guess
+;; as argument and keeps improving the guess until it is good enough.  Rewrite
+;; the `sqrt' procedure of section *note 1-1-7:: and the `fixed-point' procedure
+;; of section *note 1-3-3:: in terms of `iterative-improve'.
+(defun interactive-improve (nicep improve guess)
+  (labels ((iter (v)
+             (if (funcall nicep v)
+                 v
+                 (iter (funcall improve v)))))
+    (iter guess)))
+
+(defun general-fixed-point (f guess)
+  (interactive-improve #'(lambda (v1 v2)
+                           (< (abs (- v1 v2)) *tolerance*))
+                       f guess))
+
+(defun general-sqrt (n)
+  (interactive-improve #'(lambda (x)
+                           (< (abs (- (square x) n)) 1e-8))
+                       #'(lambda (x) (average x (/ n x)))
+                       1.0L0))
