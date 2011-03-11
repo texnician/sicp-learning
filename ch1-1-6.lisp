@@ -952,3 +952,175 @@
                        1 #'(lambda (x) x) 1 #'1+ (1- n)))
 
 ; (eq (factorial (1- 17)) (products-of-relative-primer-to 17))
+
+;; Exercise 1.34.  Suppose we define the procedure
+
+;; (define (f g)
+;;   (g 2))
+
+;; Then we have
+
+;; (f square)
+;; 4
+
+;; (f (lambda (z) (* z (+ z 1))))
+;; 6
+
+;; What happens if we (perversely) ask the interpreter to evaluate the
+;; combination (f f)? Explain.
+(defun f-1-34 (g)
+  (funcall g 2))
+
+; (f-1-34 #'square)
+; (f-1-34 #'(lambda (z) (* z (+ z 1))))
+; (f-1-34 #'f-1-34) => (funcall #'f-1-34 2) => (funcall 2 2)
+
+;; *Exercise 1.35:* Show that the golden ratio [phi] (section *note 1-2-2::) is
+;; *a fixed point of the transformation x |-> 1 + 1/x, and use this fact to
+;; *compute [phi] by means of the `fixed-point' procedure.
+(defparameter *tolerance* 0.00001)
+
+(defun fixed-point (f first-guess)
+  (labels ((close-enoughp (v1 v2)
+             (< (abs (- v1 v2)) *tolerance*))
+           (try (guess)
+             (let ((next (funcall f guess)))
+               (if (close-enoughp guess next)
+                   next
+                   (try next)))))
+    (try first-guess)))
+
+;; (fixed-point #'(lambda (x) (+ 1 (/ 1 x))) 2.71828)
+
+;; Exercise 1.36: Modify `fixed-point' so that it prints the sequence of
+;; approximations it generates, using the `newline' and `display' primitives
+;; shown in *note Exercise 1-22::.  Then find a solution to x^x = 1000 by
+;; finding a fixed point of x |-> `log'(1000)/`log'(x).  (Use Scheme's primitive
+;; `log' procedure, which computes natural logarithms.)  Compare the number of
+;; steps this takes with and without average damping.  (Note that you cannot
+;; start `fixed-point' with a guess of 1, as this would cause division by
+;; `log'(1) = 0.)
+(defun traced-fixed-point (f first-guess)
+  (labels ((close-enoughp (v1 v2)
+             (< (abs (- v1 v2)) *tolerance*))
+           (try (guess)
+             (let ((next (funcall f guess)))
+               (format t "~f" guess)
+               (fresh-line)
+               (if (close-enoughp guess next)
+                   next
+                   (try next)))))
+    (try first-guess)))
+
+; (traced-fixed-point #'(lambda (x) (/ (log 1000) (log x))) pi)
+; (traced-fixed-point #'(lambda (x) (average x (/ (log 1000) (log x)))) pi)
+; (traced-fixed-point #'(lambda (x) (+ 1 (/ 1 x))) -1.5)
+
+;; *Exercise 1.37:* a. An infinite "continued fraction" is an expression of the
+;; form
+
+;;                           N_1
+;;                f = ---------------------
+;;                               N_2
+;;                    D_1 + ---------------
+;;                                   N_3
+;;                          D_2 + ---------
+;;                                D_3 + ...
+
+;; As an example, one can show that the infinite continued fraction expansion
+;; with the n_i and the D_i all equal to 1 produces 1/[phi], where [phi] is the
+;; golden ratio (described in section *note 1-2-2::).  One way to approximate an
+;; infinite continued fraction is to truncate the expansion after a given number
+;; of terms.  Such a truncation--a so-called finite continued fraction "k-term
+;; finite continued fraction"--has the form
+
+;;             N_1
+;;      -----------------
+;;                N_2
+;;      D_1 + -----------
+;;            ...    N_K
+;;                + -----
+;;                   D_K
+
+;; Suppose that `n' and `d' are procedures of one argument (the term index i)
+;; that return the n_i and D_i of the terms of the continued fraction.  Define a
+;; procedure `cont-frac' such that evaluating `(cont-frac n d k)' computes the
+;; value of the k-term finite continued fraction.  Check your procedure by
+;; approximating 1/[phi] using
+
+;;      (cont-frac (lambda (i) 1.0)
+;;                 (lambda (i) 1.0)
+;;                 k)
+
+;; for successive values of `k'.  How large must you make `k' in order to get an
+;; approximation that is accurate to 4 decimal places?
+
+;; b. If your `cont-frac' procedure generates a recursive process, write one
+;; that generates an iterative process.  If it generates an iterative process,
+;; write one that generates a recursive process.
+(defun cont-frac (n d k)
+  (labels ((iter (x)
+             (let ((term-n (funcall n x))
+                   (term-d (funcall d x)))
+               (if (eq x k)
+                   (/ term-n term-d)
+                   (/ term-n (+ term-d (iter (1+ x))))))))
+    (iter 1)))
+
+(defun cont-frac-iterate (n d k)
+  (labels ((iter (x acc)
+             (let ((term-n (funcall n x))
+                   (term-d (funcall d x)))
+               (if (eq x 1)
+                   (/ term-n (+ term-d acc))
+                   (iter (1- x) (/ term-n (+ term-d acc)))))))
+    (iter k 0)))
+
+;; (expt (/ (+ 1 (sqrt 5)) 2) -1)
+;; (eql (cont-frac #'(lambda (i) 1.0) #'(lambda (i) 1.0) 17)
+;;      (cont-frac-iterate #'(lambda (i) 1.0) #'(lambda (i) 1.0) 17))
+
+;; *Exercise 1.38:* In 1737, the Swiss mathematician Leonhard Euler published a
+;; memoir `De Fractionibus Continuis', which included a continued fraction
+;; expansion for e - 2, where e is the base of the natural logarithms.  In this
+;; fraction, the n_i are all 1, and the D_i are successively 1, 2, 1, 1, 4, 1,
+;; 1, 6, 1, 1, 8, ....  Write a program that uses your `cont-frac' procedure
+;; from *note Exercise 1-37:: to approximate e, based on Euler's expansion.
+
+(defun de-fractionibus-continuis (k)
+  (+ 2 (cont-frac #'(lambda (i) 1.0)
+                  #'(lambda (i)
+                      (let ((j (- i 2)))
+                        (cond ((< i 3) i)
+                              ((eq (mod j 3) 0)
+                               (+ 2 (* 2 (/ j 3))))
+                               (t 1))))
+                      k)))
+
+; (de-fractionibus-continuis 10)
+
+;; *Exercise 1.39:* A continued fraction representation of the tangent function
+;; was published in 1770 by the German mathematician J.H. Lambert:
+
+;;                    x
+;;      tan x = ---------------
+;;                      x^2
+;;              1 - -----------
+;;                        x^2
+;;                  3 - -------
+;;                      5 - ...
+
+;; where x is in radians.  Define a procedure `(tan-cf x k)' that computes an
+;; approximation to the tangent function based on Lambert's formula.  `K'
+;; specifies the number of terms to compute, as in *note Exercise 1-37::.
+(defun tan-cf (x k)
+  (let ((neg-square-x (* -1 (square x))))
+    (cont-frac-iterate #'(lambda (i)
+                           (if (eq i 1)
+                               x
+                             neg-square-x))
+                       #'(lambda (i)
+                           (+ 1.0 (* 2 (1- i))))
+                       k)))
+
+;; (tan-cf (* pi 1/4) 8)
