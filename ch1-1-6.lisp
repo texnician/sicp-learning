@@ -436,9 +436,11 @@
 ;; the normal-order evaluation of (gcd 206 40)? In the applicative-order
 ;; evaluation?
 (defun gcd1 (a b)
-  (if (eq 0 b)
-      a
-      (gcd1 b (mod a b))))
+  (let ((x (max (abs a) (abs b)))
+        (y (min (abs a) (abs b))))
+    (if (eq 0 y)
+        x
+        (gcd1 y (mod x y)))))
 
 ;; (gcd1 206 40)
 ;; ;; Normal-order
