@@ -154,3 +154,68 @@
 
 ;; (fcar (fcons 1 2))
 ;; (fcdr (fcons 1 2))
+
+;; *Exercise 2.5:* Show that we can represent pairs of nonnegative integers
+;; using only numbers and arithmetic operations if we represent the pair a and b
+;; as the integer that is the product 2^a 3^b.  Give the corresponding
+;; definitions of the procedures `cons', `car', and `cdr'.
+
+(defun ncons (a b)
+  (* (expt 2 a) (expt 3 b)))
+
+
+(defun ncar (c)
+  (labels ((iter (x acc)
+             (if (> (mod x 2) 0)
+                 acc
+                 (iter (/ x 2) (1+ acc)))))
+    (iter c 0)))
+
+(defun ncdr (c)
+  (labels ((iter (x acc)
+             (if (> (mod x 3) 0)
+                 acc
+                 (iter (/ x 3) (1+ acc)))))
+    (iter c 0)))
+
+;; (ncar (ncons 7 11))
+;; (ncdr (ncons 29 13))
+
+;; *Exercise 2.6:* In case representing pairs as procedures wasn't mind-boggling
+;; enough, consider that, in a language that can manipulate procedures, we can
+;; get by without numbers (at least insofar as nonnegative integers are
+;; concerned) by implementing 0 and the operation of adding 1 as
+
+;;      (define zero (lambda (f) (lambda (x) x)))
+
+;;      (define (add-1 n)
+;;        (lambda (f) (lambda (x) (f ((n f) x)))))
+
+;; This representation is known as "Church numerals", after its inventor, Alonzo
+;; Church, the logician who invented the [lambda] calculus.
+
+;; Define `one' and `two' directly (not in terms of `zero' and `add-1').  (Hint:
+;; Use substitution to evaluate `(add-1 zero)').  Give a direct definition of
+;; the addition procedure `+' (not in terms of repeated application of `add-1').
+(defparameter *zero* (lambda (f) (lambda (x) x)))
+
+(defun add-1 (n)
+  (lambda (f) (lambda (x) (funcall f (funcall (funcall n f) x)))))
+
+(defparameter *one* (lambda (f) (lambda (x) (funcall f x))))
+(defparameter *two* (lambda (f) (lambda (x) (funcall f (funcall f x)))))
+(defparameter *five*
+  (lambda (f)
+    (lambda (x)
+      (funcall f (funcall f (funcall f (funcall f (funcall f x))))))))
+
+
+(defun fadd (a b)
+  (lambda (f) (lambda (x) (funcall (funcall a f) (funcall (funcall b f) x)))))
+
+;; (funcall (funcall *zero* #'1+) 0)
+;; (funcall (funcall (add-1 *two*) #'1+) 0)
+;; (funcall (funcall *one* #'1+) 0)
+;; (funcall (funcall *two* #'1+) 0)
+;; (funcall (funcall *five* #'1+) 0)
+;; (funcall (funcall (fadd *five* *two*) #'1+) 0)
