@@ -601,6 +601,6 @@
 (defun for-each (f items)
   (labels ((iter (action lst)
              (if (null lst)
-                 88
+                 action
                  (iter (funcall f (car lst)) (cdr lst)))))
     (iter nil items)))
