@@ -604,3 +604,61 @@
                  action
                  (iter (funcall f (car lst)) (cdr lst)))))
     (iter nil items)))
+
+;; (for-each #'(lambda (x) (fresh-line) (prin1 x))
+;;           '(57 321 88))
+
+;; *Exercise 2.26:* Suppose we define `x' and `y' to be two lists:
+
+;;      (define x (list 1 2 3))
+
+;;      (define y (list 4 5 6))
+
+;; What result is printed by the interpreter in response to evaluating each of
+;; the following expressions:
+
+;;      (append x y)
+
+;;      (cons x y)
+
+;;      (list x y)
+
+(assert (equal (append '(1 2 3) '(4 5 6)) '(1 2 3 4 5 6)))
+(assert (equal (cons '(1 2 3) '(4 5 6)) '((1 2 3) . (4 5 6))))
+(assert (equal (list '(1 (2) 3) '(4 5 6)) '((1 2 3) (4 5 6))))
+
+;; *Exercise 2.27:* Modify your `reverse' procedure of *note Exercise 2-18:: to
+;; produce a `deep-reverse' procedure that takes a list as argument and returns
+;; as its value the list with its elements reversed and with all sublists
+;; deep-reversed as well.  For example,
+
+;;      (define x (list (list 1 2) (list 3 4)))
+
+;;      x
+;;      ((1 2) (3 4))
+
+;;      (reverse x)
+;;      ((3 4) (1 2))
+
+;;      (deep-reverse x)
+;;      ((4 3) (2 1))
+(defun deep-reverse (items)
+  (if (null items)
+      nil
+      (append (deep-reverse (cdr items))
+              (if (consp (car items))
+                  (list (deep-reverse (car items)))
+                  (list (car items))))))
+
+(defun deep-reverse-tail-recursive (items)
+  (labels ((iter (acc lst)
+             (if (null lst)
+                 acc
+                 (iter (cons (if (consp (car lst))
+                                 (iter nil (car lst))
+                                 (car lst)) acc)
+                       (cdr lst)))))
+    (iter nil items)))
+                                  
+; (deep-reverse '((1 2) 3 4 (5 (6 (7)) 8)))
+; (deep-reverse-tail-recursive '((1 2) 3 4 (5 (6 (7)) 8)))
