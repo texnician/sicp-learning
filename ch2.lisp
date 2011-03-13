@@ -574,6 +574,14 @@
 ;;        (iter items nil))
 
 ;; This doesn't work either.  Explain.
+(defun square-list3 (items)
+  (labels ((iter (acc lst)
+             (if (null lst)
+                 acc
+                 (iter (append acc (list (square (car lst)))) (cdr lst)))))
+    (iter nil items)))
+
+; (square-list3 '(1 2 3 4))
 
 ;; *Exercise 2.23:* The procedure `for-each' is similar to `map'.  It takes as
 ;; arguments a procedure and a list of elements.  However, rather than forming a
@@ -590,3 +598,9 @@
 
 ;; The value returned by the call to `for-each' (not illustrated above) can be
 ;; something arbitrary, such as true.  Give an implementation of `for-each'.
+(defun for-each (f items)
+  (labels ((iter (action lst)
+             (if (null lst)
+                 88
+                 (iter (funcall f (car lst)) (cdr lst)))))
+    (iter nil items)))
