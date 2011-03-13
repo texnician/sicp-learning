@@ -625,7 +625,7 @@
 
 (assert (equal (append '(1 2 3) '(4 5 6)) '(1 2 3 4 5 6)))
 (assert (equal (cons '(1 2 3) '(4 5 6)) '((1 2 3) . (4 5 6))))
-(assert (equal (list '(1 (2) 3) '(4 5 6)) '((1 2 3) (4 5 6))))
+(assert (equal (list '(1 2 3) '(4 5 6)) '((1 2 3) (4 5 6))))
 
 ;; *Exercise 2.27:* Modify your `reverse' procedure of *note Exercise 2-18:: to
 ;; produce a `deep-reverse' procedure that takes a list as argument and returns
@@ -662,3 +662,33 @@
                                   
 ; (deep-reverse '((1 2) 3 4 (5 (6 (7)) 8)))
 ; (deep-reverse-tail-recursive '((1 2) 3 4 (5 (6 (7)) 8)))
+
+;; *Exercise 2.28:* Write a procedure `fringe' that takes as argument a tree
+;; (represented as a list) and returns a list whose elements are all the leaves
+;; of the tree arranged in left-to-right order.  For example,
+
+;;      (define x (list (list 1 2) (list 3 4)))
+
+;;      (fringe x)
+;;      (1 2 3 4)
+
+;;      (fringe (list x x))
+;;      (1 2 3 4 1 2 3 4)
+(defun fringe (tree)
+  (cond ((null tree) nil)
+        ((consp (car tree))
+         (append (fringe (car tree)) (fringe (cdr tree))))
+        (t (cons (car tree) (fringe (cdr tree))))))
+
+(defun fringe-tail-recursive (tree)
+  (labels ((iter (accl lst)
+             (cond ((null lst) accl)
+                   ((consp (car lst))
+                    (iter (append (iter accl (car lst)))
+                          (cdr lst)))
+                   (t (iter (append accl (list (car lst))) (cdr lst))))))
+    (iter nil tree)))
+                    
+(defparameter *tmp* '((1 2) (3 4)))
+
+; (fringe-tail-recursive (list *tmp* *tmp*))
