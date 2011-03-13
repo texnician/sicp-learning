@@ -379,16 +379,16 @@
                  (reverse-iter (append (list (car l)) acc) (cdr l)))))
     (reverse-iter nil lst)))
 
-(sicp-reverse1 (list 1 4 9 16 25))
+;(sicp-reverse1 (list 1 4 9 16 25))
 
 ;; *Exercise 2.19:* Consider the change-counting program of section *1-2-2::.
-;; *It would be nice to be able to easily change the ;; currency used by the
-;; *program, so that we could compute the number ;; of ways to change a British
-;; *pound, for example.  As the program is ;; written, the knowledge of the
-;; *currency is distributed partly into ;; the procedure `first-denomination'
-;; *and partly into the procedure ;; `count-change' (which knows that there are
-;; *five kinds of U.S.  ;; coins).  It would be nicer to be able to supply a
-;; *list of coins to ;; be used for making change.
+;; It would be nice to be able to easily change the currency used by the
+;; program, so that we could compute the number of ways to change a British
+;; pound, for example.  As the program is written, the knowledge of the currency
+;; is distributed partly into the procedure `first-denomination' and partly into
+;; the procedure `count-change' (which knows that there are five kinds of U.S.
+;; coins).  It would be nicer to be able to supply a list of coins to be used
+;; for making change.
 
 ;; We want to rewrite the procedure `cc' so that its second argument is a list
 ;; of the values of the coins to use rather than an integer specifying which
@@ -421,6 +421,30 @@
 ;; `no-more?' in terms of primitive operations on list structures.  Does the
 ;; order of the list `coin-values' affect the answer produced by `cc'?  Why or
 ;; why not?
+
+(defun cc (amount coin-values)
+  (cond ((= amount 0) 1)
+        ((or (< amount 0) (no-morep coin-values)) 0)
+        (t (+ (cc amount
+                  (except-first-denomination coin-values))
+              (cc (- amount
+                     (first-denomination coin-values))
+                  coin-values)))))
+
+(defun first-denomination (coin-values)
+  (car coin-values))
+
+(defun except-first-denomination (coin-values)
+  (cdr coin-values))
+
+(defun no-morep (coin-values)
+  (null coin-values))
+
+(defparameter *us-coins* (list 50 25 10 5 1))
+(defparameter *uk-coins* (list 100 50 20 10 5 2 1 0.5))
+(defparameter *cn-coins* (list 100 50 20 10 5 2 1))
+
+;(time (cc 100 *cn-coins*))
 
 ;; *Exercise 2.20:* The procedures `+', `*', and `list' take arbitrary numbers
 ;; of arguments. One way to define such procedures is to use `define' with
@@ -456,3 +480,38 @@
 
 ;;      (same-parity 2 3 4 5 6 7)
 ;;      (2 4 6)
+(defun same-parity (first &rest others)
+  (labels ((same-parity-iter (acc lst)
+             (if (null lst)
+                 acc
+                 (if (= (mod first 2) (mod (car lst) 2))
+                     (same-parity-iter (append acc (list (car lst))) (cdr lst))
+                     (same-parity-iter acc (cdr lst))))))
+    (cons first (same-parity-iter nil others))))
+
+(defun same-parity-full-recursive (first &rest others)
+  (labels ((same-parity-iter (lst)
+             (if (null lst)
+                 nil
+                 (if (= (mod first 2) (mod (car lst) 2))
+                     (append (list (car lst)) (same-parity-iter (cdr lst)))
+                     (same-parity-iter (cdr lst))))))
+    (cons first (same-parity-iter others))))
+
+;; Use generalized filter pattern
+(defun same-parity-general (first &rest others)
+  (cons first (filtered-accumulate-tail-recursive
+               #'(lambda (term acc)
+                   (if (null term)
+                       acc
+                       (append acc (list term))))
+               #'(lambda (x)
+                   (= (mod first 2) (mod (nth x others) 2)))
+               nil
+               #'(lambda (x)
+                   (nth x others))
+               0
+               #'1+
+               (1- (length others)))))
+
+;(same-parity-general 2 4 6 8 10)
