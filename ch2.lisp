@@ -817,3 +817,67 @@
 ;;      How much do you need to change your programs to convert to the new
 ;;      representation?
 '(Only selectors need change)
+
+;; *Exercise 2.30:* Define a procedure `square-tree' analogous to the
+;; `square-list' procedure of *note Exercise 2-21::.  That is, `square-list'
+;; should behave as follows:
+
+;;      (square-tree
+;;       (list 1
+;;             (list 2 (list 3 4) 5)
+;;             (list 6 7)))
+;;      (1 (4 (9 16) 25) (36 49))
+
+;; Define `square-tree' both directly (i.e., without using any higher-order
+;; procedures) and also by using `map' and recursion.
+(defun square-tree (tree)
+    (cond ((null tree)
+           nil)
+          ((consp (car tree))
+           (cons (square-tree (car tree))
+                 (square-tree (cdr tree))))
+          (t (cons (square (car tree))
+                   (square-tree (cdr tree))))))
+
+(defun map-square-tree (tree)
+  (map 'list #'(lambda (x)
+                 (if (consp x)
+                     (map-square-tree x)
+                     (square x)))
+       tree))
+
+;; (square-tree '(1 (2 (3 4) 5) (6 7)))
+;; (map-square-tree '(1 (2 (3 4) 5) (6 7)))
+
+;; *Exercise 2.31:* Abstract your answer to *note Exercise 2-30:: to produce a
+;; procedure `tree-map' with the property that `square-tree' could be defined as
+
+;;      (define (square-tree tree) (tree-map square tree))
+(defun tree-map (f tree)
+  (map 'list #'(lambda (x)
+                 (if (consp x)
+                     (tree-map f x)
+                     (funcall f x)))
+       tree))
+
+; ((lambda (x) (tree-map #'square x)) '(1 (2 (3 4) 5) (6 7)))
+
+;; *Exercise 2.32:* We can represent a set as a list of distinct elements, and
+;; we can represent the set of all subsets of the set as a list of lists.  For
+;; example, if the set is `(1 2 3)', then the set of all subsets is `(() (3) (2)
+;; (2 3) (1) (1 3) (1 2) (1 2 3))'.  Complete the following definition of a
+;; procedure that generates the set of subsets of a set and give a clear
+;; explanation of why it works:
+
+;;      (define (subsets s)
+;;        (if (null? s)
+;;            (list nil)
+;;            (let ((rest (subsets (cdr s))))
+;;              (append rest (map <??> rest)))))
+(defun subsets (s)
+  (if (null s)
+      '(nil)
+      (let ((rest (subsets (cdr s))))
+        (append rest (map 'list #'(lambda (x)
+                                    (cons (car s) x))
+                          rest)))))
