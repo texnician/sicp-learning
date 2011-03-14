@@ -689,6 +689,131 @@
                    (t (iter (append accl (list (car lst))) (cdr lst))))))
     (iter nil tree)))
                     
-(defparameter *tmp* '((1 2) (3 4)))
+; (defparameter *tmp* '((1 2) (3 4)))
 
 ; (fringe-tail-recursive (list *tmp* *tmp*))
+
+;; *Exercise 2.29:* A binary mobile consists of two branches, a left branch and
+;; a right branch.  Each branch is a rod of a certain length, from which hangs
+;; either a weight or another binary mobile.  We can represent a binary mobile
+;; using compound data by constructing it from two branches (for example, using
+;; `list'):
+
+;;      (define (make-mobile left right)
+;;        (list left right))
+
+;; A branch is constructed from a `length' (which must be a number) together
+;; with a `structure', which may be either a number (representing a simple
+;; weight) or another mobile:
+
+;;      (define (make-branch length structure)
+;;        (list length structure))
+
+;;   a. Write the corresponding selectors `left-branch' and `right-branch',
+;;      which return the branches of a mobile, and `branch-length' and
+;;      `branch-structure', which return the components of a branch.
+(defun make-mobile (left right)
+  (list left right))
+
+(defun make-branch (length structure)
+  (list length structure))
+
+(defun left-branch (mobile)
+  (car mobile))
+
+(defun right-branch (mobile)
+  (cadr mobile))
+
+(defun branch-length (branch)
+  (car branch))
+
+(defun branch-structure (branch)
+  (cadr branch))
+
+(defun mobilep (structure)
+  (consp structure))
+
+(defparameter *w1* 1)
+(defparameter *b1* (make-branch 1 *w1*))
+(defparameter *w2* 3)
+(defparameter *b2* (make-branch 1 *w2*))
+(defparameter *m1-2* (make-mobile *b1* *b2*))
+(defparameter *bm1-2* (make-branch 1 *m1-2*))
+(defparameter *w3* 5)
+(defparameter *b3* (make-branch 1 *w3*))
+(defparameter *m1-2-3* (make-mobile *bm1-2* *b3*))
+(defparameter *w4* 9)
+(defparameter *b4* (make-branch 1 *w4*))
+(defparameter *w5* 7)
+(defparameter *b5* (make-branch 1 *w5*))
+(defparameter *m4-5* (make-mobile *b4* *b5*))
+(defparameter *bm4-5* (make-branch 1 *m4-5*))
+(defparameter *w6* 8)
+(defparameter *b6* (make-branch 1 *w6*))
+(defparameter *m4-5-6* (make-mobile *bm4-5* *b6*))
+(defparameter *bm1-2-3* (make-branch 1 *m1-2-3*))
+(defparameter *bm4-5-6* (make-branch 1 *m4-5-6*))
+(defparameter *m* (make-mobile *bm1-2-3* *bm4-5-6*))
+
+;;   b. Using your selectors, define a procedure `total-weight' that returns the
+;;      total weight of a mobile.
+(defun total-weight (mobile)
+  (let ((lbranch (left-branch mobile))
+        (rbranch (right-branch mobile)))
+    (labels ((iter (br)
+               (let ((st (branch-structure br)))
+                 (if (mobilep st)
+                     (+ (iter (left-branch st))
+                        (iter (right-branch st)))
+                     st))))
+      (+ (iter lbranch)
+         (iter rbranch)))))
+
+(total-weight *m*)
+;;   c. A mobile is said to be "balanced" if the torque applied by its top-left
+;;      branch is equal to that applied by its top-right branch (that is, if the
+;;      length of the left rod multiplied by the weight hanging from that rod is
+;;      equal to the corresponding product for the right side) and if each of
+;;      the submobiles hanging off its branches is balanced. Design a predicate
+;;      that tests whether a binary mobile is balanced.
+(defun mobile-balancep (mobile)
+  (labels ((weight-weight-balancep (weight-length1 weight1 weight-length2 weight2)
+             (= (* weight-length1 weight1) (* weight-length2 weight2)))
+           (mobile-weight-balancep (weight-length weight mobi-length mobi)
+             (and (= (* weight-length weight) (* mobi-length (total-weight mobi)))
+                  (mobile-balancep (mobi))))
+           (balance-iter (lbr rbr)
+             (let ((lst (branch-structure lbr))
+                   (ll (branch-length lbr))
+                   (rst (branch-structure rbr))
+                   (rl (branch-length rbr)))
+               (cond ((and (not (mobilep lst)) (not (mobilep rst)))
+                      ;; weight weight
+                      (weight-weight-balancep ll lst rl rst))
+                     ((and (not (mobilep lst)) (mobilep rst))
+                      ;; weight mobile
+                      (mobile-weight-balancep ll lst rl rst))
+                     ((and (mobilep lst) (not (mobilep rst)))
+                      ;; mobile weight
+                      (mobile-weight-balancep #'balance-iter rl rst
+                                              ll lst))
+                     (t
+                      ;; mobile mobile
+                      (and (= (* ll (total-weight lst)) (* rl (total-weight rst)))
+                           (and (mobile-balancep lst) (mobile-balancep rst))))))))
+    (balance-iter (left-branch mobile) (right-branch mobile))))
+
+; (mobile-balancep *m*)
+; (mobile-balancep '((3 ((1 3) (3 1))) (4 ((2 1) (1 2)))))
+;;   d. Suppose we change the representation of mobiles so that the constructors
+;;      are
+
+;;           (define (make-mobile left right)
+;;             (cons left right))
+
+;;           (define (make-branch length structure)
+;;             (cons length structure))
+
+;;      How much do you need to change your programs to convert to the new
+;;      representation?
+'(Only selectors need change)
