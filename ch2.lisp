@@ -956,3 +956,97 @@
                                        ((consp x) (count-leaves x))
                                        (t 1)))
                              tree)))
+
+;; *Exercise 2.36:* The procedure `accumulate-n' is similar to `accumulate'
+;; except that it takes as its third argument a sequence of sequences, which are
+;; all assumed to have the same number of elements.  It applies the designated
+;; accumulation procedure to combine all the first elements of the sequences,
+;; all the second elements of the sequences, and so on, and returns a sequence
+;; of the results.  For instance, if `s' is a sequence containing four
+;; sequences, `((1 2 3) (4 5 6) (7 8 9) (10 11 12)),' then the value of
+;; `(accumulate-n + 0 s)' should be the sequence `(22 26 30)'.  Fill in the
+;; missing expressions in the following definition of `accumulate-n':
+
+;;      (define (accumulate-n op init seqs)
+;;        (if (null? (car seqs))
+;;            nil
+;;            (cons (accumulate op init <??>)
+;;                  (accumulate-n op init <??>))))
+(defun accumulate-n (op init seqs)
+  (if (null (car seqs))
+      nil
+      (cons (sicp-accumulate op init (map 'list #'(lambda (x)
+                                                    (car x)) seqs))
+            (accumulate-n op init (map 'list #'(lambda (x)
+                                                 (cdr x)) seqs)))))
+
+;(accumulate-n #'+ 0 '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
+
+;; Exercise 2.37 Suppose we represent vectors v = (v_i) as sequences of numbers,
+;; and matrices m = (m_(ij)) as sequences of vectors (the rows of the matrix).
+;; For example, the matrix
+
+;;      +-         -+
+;;      |  1 2 3 4  |
+;;      |  4 5 6 6  |
+;;      |  6 7 8 9  |
+;;      +-         -+
+
+;; is represented as the sequence `((1 2 3 4) (4 5 6 6) (6 7 8 9))'.  With this
+;; representation, we can use sequence operations to concisely express the basic
+;; matrix and vector operations.  These operations (which are described in any
+;; book on matrix algebra) are the following:
+
+;;                                             __
+;;   (dot-product v w)      returns the sum >_i v_i w_i
+
+;;   (matrix-*-vector m v)  returns the vector t,
+;;                                         __
+;;                          where t_i = >_j m_(ij) v_j
+
+;;   (matrix-*-matrix m n)  returns the matrix p,
+;;                                            __
+;;                          where p_(ij) = >_k m_(ik) n_(kj)
+
+;;   (transpose m)          returns the matrix n,
+;;                          where n_(ij) = m_(ji)
+
+;; We can define the dot product as(4)
+
+;;   (define (dot-product v w)
+;;     (accumulate + 0 (map * v w)))
+
+(defparameter *tmp-matrix* '((1 2 3 4) (4 5 6 6) (6 7 8 9)))
+(defparameter *tmp-vec* '(3 2 1 0))
+(defun dot-product (v w)
+  (sicp-accumulate #'+ 0 (map 'list #'* v w)))
+
+; (dot-product '(1 2 3 4) '(1 2 3 4))
+;; Fill in the missing expressions in the following procedures for computing the
+;; other matrix operations.  (The procedure `accumulate-n' is defined in
+;; *noteExercise 2-36
+
+;;   (define (matrix-*-vector m v)
+;;     (map <??> m))
+
+;;   (define (transpose mat)
+;;     (accumulate-n <??> <??> mat))
+
+;;   (define (matrix-*-matrix m n)
+;;     (let ((cols (transpose n)))
+;;       (map <??> m)))
+(defun matrix-*-vector (m v)
+  (map 'list #'(lambda (x)
+                 (dot-product x v)) m))
+
+(defun transpose (mat)
+  (accumulate-n #'cons nil mat))
+
+(defun matrix-*-matrix (m n)
+  (let ((cols (transpose n)))
+    (map 'list #'(lambda (x)
+                   (matrix-*-vector cols x))
+                   m)))
+
+(defparameter *tmp-matrix-2* '((1 0 0 0) (0 1 0 0) (0 0 1 0) (0 0 0 1)))
+; (matrix-*-matrix *tmp-matrix* *tmp-matrix-2*)
