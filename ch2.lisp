@@ -899,6 +899,13 @@
       initial
       (funcall op (car sequence) (sicp-accumulate op initial (cdr sequence)))))
 
+;; (defun fold-right (op initial sequence)
+;;   (labels ((iter (acc lst)
+;;              (if (null lst)
+;;                  acc
+;;                  (iter (funcall op (car lst) initial) (cdr lst)))))
+;;     (iter initial sequence)))
+      
 (defun sicp-map (p sequence)
   (sicp-accumulate #'(lambda (x y) (cons (funcall p x) y)) nil sequence))
 
@@ -1050,3 +1057,90 @@
 
 (defparameter *tmp-matrix-2* '((1 0 0 0) (0 1 0 0) (0 0 1 0) (0 0 0 1)))
 ; (matrix-*-matrix *tmp-matrix* *tmp-matrix-2*)
+
+;; *Exercise 2.38:* The `accumulate' procedure is also known as
+;; `fold-right', because it combines the first element of the
+;; sequence with the result of combining all the elements to the
+;; right.  There is also a `fold-left', which is similar to
+;; `fold-right', except that it combines elements working in the
+;; opposite direction:
+
+;;      (define (fold-left op initial sequence)
+;;        (define (iter result rest)
+;;          (if (null? rest)
+;;              result
+;;              (iter (op result (car rest))
+;;                    (cdr rest))))
+;;        (iter initial sequence))
+
+;; What are the values of
+
+;;      (fold-right / 1 (list 1 2 3))
+
+;;      (fold-left / 1 (list 1 2 3))
+
+;;      (fold-right list nil (list 1 2 3))
+
+;;      (fold-left list nil (list 1 2 3))
+
+;; Give a property that `op' should satisfy to guarantee that
+;; `fold-right' and `fold-left' will produce the same values for any
+;; sequence.
+(defun fold-left (op initial sequence)
+  (labels ((iter (result rest)
+             (if (null rest)
+                 result
+                 (iter (funcall op result (car rest))
+                       (cdr rest)))))
+    (iter initial sequence)))
+
+(defun fold-right (&rest args)
+  (apply #'sicp-accumulate args))
+
+
+
+;; (fold-right #'/ 1 (list 1 2 3))
+;; => (iter (/ 1 '1) (2 3))
+;; => (iter (/ 2 1) (3))
+;; => (iter (/ 3 2) nil)
+;; => 3/2
+
+;; (fold-left #'/ 1 (list 1 2 3))
+;; => (iter (/ '1 1) (2 3))
+;; => (iter (/ 1 2) (3))
+;; => (iter (/ 1/2 3) nil)
+;; => 1/6
+
+; (sicp-accumulate #'list nil (list 1 2 3))
+;(fold-right #'list nil (list 1 2 3))
+;; (fold-right #'list nil (list 1 2 3))
+;; => (list 3 nil)
+;; => (list 2 '(3 nil))
+;; => (list 1 '(2 (3 nil))) 
+;; => '(1 (2 (3 nil)))
+
+;; (fold-left #'list nil (list 1 2 3))
+;; => (list nil 3)
+;; => (list '(nil 3) 2)
+;; => (list '((nil 3) 2) 1)
+;; => '(((nil 3) 2) 1)
+;; '(((nil 1) 2 3))
+;; op should be a Associative operation, (equal (op c (a b)) (op a (b c))
+
+;; *Exercise 2.39:* Complete the following definitions of `reverse'
+;; (*note Exercise 2-18::) in terms of `fold-right' and `fold-left'
+;; from *note Exercise 2-38:::
+
+;;      (define (reverse sequence)
+;;        (fold-right (lambda (x y) <??>) nil sequence))
+
+;;      (define (reverse sequence)
+;;        (fold-left (lambda (x y) <??>) nil sequence))
+(defun reverse-by-fold-right (sequence)
+  (fold-right #'(lambda (x y) (append y (list x))) nil sequence))
+
+(defun reverse-by-fold-left (sequence)
+  (fold-left #'(lambda (x y) (append (list y) x)) nil sequence))
+
+;(reverse-by-fold-left '(1 2 3 4 5))
+;(reverse-by-fold-right '(1 2 3 4 5))
