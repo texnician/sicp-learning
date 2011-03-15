@@ -378,7 +378,7 @@
   (labels ((reverse-iter (acc l)
              (if (null l)
                  acc
-                 (reverse-iter (append (list (car l)) acc) (cdr l)))))
+                 (reverse-iter (cons (car l) acc) (cdr l)))))
     (reverse-iter nil lst)))
 
 ;(sicp-reverse1 (list 1 4 9 16 25))
@@ -1111,7 +1111,7 @@
 ;; => (iter (/ 1/2 3) nil)
 ;; => 1/6
 
-; (sicp-accumulate #'list nil (list 1 2 3))
+
 ;(fold-right #'list nil (list 1 2 3))
 ;; (fold-right #'list nil (list 1 2 3))
 ;; => (list 3 nil)
@@ -1140,7 +1140,7 @@
   (fold-right #'(lambda (x y) (append y (list x))) nil sequence))
 
 (defun reverse-by-fold-left (sequence)
-  (fold-left #'(lambda (x y) (append (list y) x)) nil sequence))
+  (fold-left #'(lambda (x y) (cons y x)) nil sequence))
 
 ;(reverse-by-fold-left '(1 2 3 4 5))
 ;(reverse-by-fold-right '(1 2 3 4 5))
