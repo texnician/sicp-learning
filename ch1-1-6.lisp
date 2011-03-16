@@ -1,3 +1,10 @@
+;; Define SICP package
+(defpackage :sicp
+  (:use :common-lisp))
+
+(in-package :sicp)
+
+
 ;; Exercise 1.1.  Below is a sequence of expressions. What is the result printed by
 ;; the interpreter in response to each expression? Assume that the sequence is to
 ;; be evaluated in the order in which it is presented.
@@ -941,10 +948,10 @@
 (defun more-general-wallis-product (n)
   (labels ((fterm (k)
             (expt (/ (+ 2 k) (+ 3 k)) (expt -1 k))))
-    (filtered-accumulate #'* #'(lambda (x) t) 1 #'fterm 0 #'1+ n)))
+    (filtered-accumulate-tail-recursive #'* #'(lambda (x) t) 1 #'fterm 0 #'1+ n)))
 
 ;(more-general-sum 100)
-;(* 4.0 (more-general-wallis-product 5000))
+;(time (* 4.0 (more-general-wallis-product 25000)))
 (defun sum-of-primer-square (a b)
   (filtered-accumulate #'+ #'primep 0 #'square a #'1+ b))
 
@@ -1090,7 +1097,7 @@
 ;; from *note Exercise 1-37:: to approximate e, based on Euler's expansion.
 
 (defun de-fractionibus-continuis (k)
-  (+ 2 (cont-frac #'(lambda (i) 1.0)
+  (+ 2 (cont-frac #'(lambda (i) 1.0d0)
                   #'(lambda (i)
                       (let ((j (- i 2)))
                         (cond ((< i 3) i)
@@ -1125,7 +1132,7 @@
                            (+ 1.0d0 (* 2 (1- i))))
                        k)))
 
-;; (tan-cf (* pi 7/4) 8)
+;; (tan-cf (* pi 7/4) 19)
 
 ;; *Exercise 1.40:* Define a procedure `cubic' that can be used together with
 ;; the `newtons-method' procedure in expressions of the form
