@@ -1316,4 +1316,39 @@
 ;; the program in exercise 2.42 solves the puzzle in time T.
 
 ;; louis's program compute each `queen-cols' N times. thus the N step recursive
-;; call will be N^N times slower than T.
+;; call will be N^(N-1) times slower than T.
+
+;; *Exercise 2.44:* Define the procedure `up-split' used by `corner-split'.  It
+;; is similar to `right-split', except that it switches the roles of `below' and
+;; `beside'.
+(defun flipped-pairs (painter)
+  (let ((painter2 (beside painer (flip-vert painter))))
+    (below painter2 painter2)))
+
+(defun right-split (painter n)
+  (if (= 0 n)
+      painter
+      (let ((smaller (right-split (1- n))))
+        (beside painter (below smaller smaller)))))
+
+(defun corner-split (painter n)
+  (if (= 0 n)
+      painter
+      (let* ((up (up-split painter (1- n)))
+             (right (right-split painter (1- n)))
+             (top-left (beside up up))
+             (bottom-right (beside right right))
+             (top-right (corner-split painter (1- n))))
+        (beside (below top-left painter)
+                (below top-right bottom-right)))))
+
+(defun square-limit (painter n)
+  (let* ((corner (corner-split painter n))
+         (half (below corner (flip-vert corner)))
+    (beside (flip-horiz half) half))))
+
+(defun up-split (painter n)
+  (if (= n 0)
+      painter
+      (let (smaller (up-split (1- n)))
+        (below (beside smaller smaller) painter))))
