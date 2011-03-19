@@ -1328,7 +1328,7 @@
 (defun right-split (painter n)
   (if (= 0 n)
       painter
-      (let ((smaller (right-split (1- n))))
+      (let ((smaller (right-split painter (1- n))))
         (beside painter (below smaller smaller)))))
 
 (defun corner-split (painter n)
@@ -1337,18 +1337,212 @@
       (let* ((up (up-split painter (1- n)))
              (right (right-split painter (1- n)))
              (top-left (beside up up))
-             (bottom-right (beside right right))
+             (bottom-right (below right right))
              (top-right (corner-split painter (1- n))))
-        (beside (below top-left painter)
-                (below top-right bottom-right)))))
+        (beside (below painter top-left)
+                (below bottom-right top-right)))))
 
 (defun square-limit (painter n)
   (let* ((corner (corner-split painter n))
-         (half (below corner (flip-vert corner)))
-    (beside (flip-horiz half) half))))
+         (half (below (flip-vert corner) corner)))
+    (beside (flip-horiz half) half)))
 
 (defun up-split (painter n)
   (if (= n 0)
       painter
-      (let (smaller (up-split (1- n)))
-        (below (beside smaller smaller) painter))))
+      (let ((smaller (up-split painter (1- n))))
+        (below painter (beside smaller smaller)))))
+
+;; *Exercise 2.45:* `Right-split' and `up-split' can be expressed as instances
+;; of a general splitting operation.  Define a procedure `split' with the
+;; property that evaluating
+
+;;      (define right-split (split beside below))
+;;      (define up-split (split below beside))
+
+;; produces procedures `right-split' and `up-split' with the same behaviors as
+;; the ones already defined.
+(defun painter-split (first-split second-split)
+  (lambda (painter n)
+    (if (= 0 n)
+        painter
+        (let (smaller (funcall (painter-split first-split second-split) painter (1- n)))
+          (funcall first-split (funcall second-split smaller smaller))))))
+
+;; *Exercise 2.46:* A two-dimensional vector v running from the origin to a
+;; point can be represented as a pair consisting of an x-coordinate and a
+;; y-coordinate.  Implement a data abstraction for vectors by giving a
+;; constructor `make-vect' and corresponding selectors `xcor-vect' and
+;; `ycor-vect'.  In terms of your selectors and constructor, implement
+;; procedures `add-vect', `sub-vect', and `scale-vect' that perform the
+;; operations vector addition, vector subtraction, and multiplying a vector by a
+;; scalar:
+
+;;      (x_1, y_1) + (x_2, y_2) = (x_1 + x_2, y_1 + y_2)
+;;      (x_1, y_1) - (x_2, y_2) = (x_1 - x_2, y_1 - y_2)
+;;                   s * (x, y) = (sx, sy)
+(defun make-vect (a b)
+  (list a b))
+
+(defun xcor-vect (v)
+  (car v))
+
+(defun ycor-vect (v)
+  (cadr v))
+
+(defun add-vect (v1 v2)
+  (make-vect (+ (xcor-vect v1) (xcor-vect v2)) (+ (ycor-vect v1) (ycor-vect v2))))
+
+(defun sub-vect (v1 v2)
+  (add-vect v1 (scale-vect v2 -1)))
+
+(defun scale-vect (v s)
+  (make-vect (* s (xcor-vect v)) (* s (ycor-vect v))))
+
+;; *Exercise 2.47:* Here are two possible constructors for frames:
+
+;;      (define (make-frame origin edge1 edge2)
+;;        (list origin edge1 edge2))
+
+;;      (define (make-frame origin edge1 edge2)
+;;        (cons origin (cons edge1 edge2)))
+
+;; For each constructor supply the appropriate selectors to produce an
+;; implementation for frames.
+(defun make-frame (origin edge1 edge2)
+  (list origin edge1 edge2))
+
+(defun origin-frame (f)
+  (car f))
+
+(defun edge1-frame (f)
+  (cadr f))
+
+(defun edge2-frame (f)
+  (caddr f))
+
+(defun frame-coord-map (frame)
+  (lambda (v)
+    (add-vect
+     (origin-frame frame)
+     (add-vect (scale-vect (edge1-frame frame) (xcor-vect v))
+               (scale-vect (edge2-frame frame) (ycor-vect v))))))
+
+(defun segments->painter (line-pen segment-list)
+    (lambda (frame)
+      (for-each
+       #'(lambda (segment)
+           (funcall line-pen (funcall (frame-coord-map frame) (start-segment segment))
+                    (funcall (frame-coord-map frame) (end-segment segment))))
+       segment-list)))
+
+;; *Exercise 2.48:* A directed line segment in the plane can be represented as a
+;; pair of vectors--the vector running from the origin to the start-point of the
+;; segment, and the vector running from the origin to the end-point of the
+;; segment.  Use your vector representation from *note Exercise 2-46:: to define
+;; a representation for segments with a constructor `make-segment' and selectors
+;; `start-segment' and `end-segment'.
+(defun make-segment (start end)
+  (list start end))
+
+(defun start-segment (segment)
+  (car segment))
+
+(defun end-segment (segment)
+  (cadr segment))
+
+;; *Exercise 2.49:* Use `segments->painter' to define the following primitive
+;; painters:
+
+;;   a. The painter that draws the outline of the designated frame.
+
+;;   b. The painter that draws an "X" by connecting opposite corners of the
+;;      frame.
+
+;;   c. The painter that draws a diamond shape by connecting the midpoints of
+;;      the sides of the frame.
+
+;;   d. The `wave' painter.
+(defparameter *frame-outline*
+  (mapcar #'(lambda (x)
+              (make-segment (make-vect (caar x) (cdar x))
+                            (make-vect (caadr x) (cdadr x))))
+          '(((0.0 . 0.0) (1.0 . 0.0))
+            ((1.0 . 0.0) (1.0 . 1.0))
+            ((1.0 . 1.0) (0.0 . 1.0))
+            ((0.0 . 1.0) (0.0 . 0.0)))))
+
+;; *Exercise 2.50:* Define the transformation `flip-horiz', which flips painters
+;; horizontally, and transformations that rotate painters counterclockwise by
+;; 180 degrees and 270 degrees.
+(defun transform-painter (painter origin corner1 corner2)
+  (lambda (frame)
+    (let* ((m (frame-coord-map frame))
+           (new-origin (funcall m origin)))
+      (funcall painter (make-frame new-origin
+                                   (sub-vect (funcall m corner1) new-origin)
+                                   (sub-vect (funcall m corner2) new-origin))))))
+
+(defun flip-vert (painter)
+  (transform-painter painter
+                     (make-vect 0.0 1.0)
+                     (make-vect 1.0 1.0)
+                     (make-vect 0.0 0.0)))
+
+(defun rotate90 (painter)
+  (transform-painter painter
+                     (make-vect 1.0 0.0)
+                     (make-vect 1.0 1.0)
+                     (make-vect 0.0 0.0)))
+
+(defun squash-inwards (painter)
+  (transform-painter painter
+                     (make-vect 0.0 0.0)
+                     (make-vect 0.65 0.35)
+                     (make-vect 0.35 0.65)))
+
+(defun beside (painter1 painter2)
+  (let* ((split-point (make-vect 0.5 0))
+         (paint-left (transform-painter painter1
+                                        (make-vect 0.0 0.0)
+                                        split-point
+                                        (make-vect 0.0 1.0)))
+         (paint-right (transform-painter painter2
+                                         split-point
+                                         (make-vect 1.0 0.0)
+                                         (make-vect (xcor-vect split-point) 1.0))))
+    (lambda (frame)
+      (funcall paint-left frame)
+      (funcall paint-right frame))))
+      
+(defun flip-horiz (painter)
+  (transform-painter painter
+                     (make-vect 1.0 0.0)
+                     (make-vect 0.0 0.0)
+                     (make-vect 1.0 1.0)))
+
+(defun rotate180 (painter)
+  (transform-painter painter
+                     (make-vect 1.0 1.0)
+                     (make-vect 0.0 1.0)
+                     (make-vect 1.0 0.0)))
+
+(defun rotate270 (painter)
+  (transform-painter painter
+                     (make-vect 0.0 1.0)
+                     (make-vect 0.0 0.0)
+                     (make-vect 1.0 1.0)))
+
+;; *Exercise 2.51:* Define the `below' operation for painters.  `Below' takes
+;; two painters as arguments.  The resulting painter, given a frame, draws with
+;; the first painter in the bottom of the frame and with the second painter in
+;; the top.  Define `below' in two different ways--first by writing a procedure
+;; that is analogous to the `beside' procedure given above, and again in terms
+;; of `beside' and suitable rotation operations (from *note Exercise 2-50::).
+(defun below (painter1 painter2)
+  (rotate90 (beside (rotate270 painter1) (rotate270 painter2))))
+
+(defparameter *identity-frame*
+  (make-frame (make-vect 0.0 0.0)
+              (make-vect 1.0 0.0)
+              (make-vect 0.0 1.0)))
