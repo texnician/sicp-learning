@@ -1,14 +1,13 @@
-;(asdf:operate 'asdf:load-op :cl-gtk2-gtk)
 (asdf:operate 'asdf:load-op :cl-gtk2-cairo)
 (defpackage :sicp-gui
   (:shadowing-import-from #:cl-cairo2 #:scale)
-  (:use :cl #:gtk #:cl-cairo2 #:cl-gtk2-cairo #:iter #:sicp))
+  (:use :cl #:gtk #:cl-cairo2 #:cl-gtk2-cairo #:iter :sicp))
 
 (in-package :sicp-gui)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defclass cairo-w (drawing-area)
-    ((draw-fn :initform 'draw-diamond :accessor cairo-w-draw-fn))
+    ((draw-fn :initform 'draw-pic :accessor cairo-w-draw-fn))
     (:metaclass gobject:gobject-class)))
 
 (defmethod initialize-instance :after ((w cairo-w) &rest initargs)
@@ -30,6 +29,18 @@
       (with-context (ctx)
         (funcall (cairo-w-draw-fn widget) w h)
         nil))))
+
+
+(defun tmp (w h)
+  (move-to 0 (/ h 2.0))
+  (line-to (/ w 2) 0)
+  (line-to w (/ h 2))
+  (line-to (/ w 2) h)
+  (line-to 0 (/ h 2.0))
+  (stroke))
+
+(defun tmp-chunk (f)
+  (funcall f 100 100))
 
 (defun draw-diamond (w h)
   (set-source-rgb 1 1 1)
@@ -84,4 +95,29 @@
              (cairo-w :var cw))
       (widget-show w))))
 
+(defun cairo-pen (v1 v2)
+  (set-source-rgb 0 0 0)
+  (set-line-width 0.5)
+  (move-to (sicp::xcor-vect v1) (sicp::ycor-vect v1))
+  (line-to (sicp::xcor-vect v2) (sicp::ycor-vect v2))
+  (stroke))
+
+(defun ->cairo (painter w h)
+  (sicp::transform-painter (sicp::flip-vert painter)
+                           (sicp::make-vect 0.0 0.0)
+                           (sicp::make-vect w 0.0)
+                           (sicp::make-vect 0.0 h)))
+
+(defun draw-pic (w h)
+  (let ((painter (sicp::segments->painter #'cairo-pen
+                                          sicp::*frame-outline*)))
+     (funcall (->cairo (sicp::square-limit painter 8) w h) sicp::*identity-frame*)))
+
 ;(run)
+
+(defun debug-pen (v1 v2)
+  (fresh-line)
+  (format t "v1:~a  v2~a" v1 v2))
+
+;; (let ((painter (sicp::segments->painter #'debug-pen sicp::*frame-outline*)))
+;;   (funcall (->cairo (sicp::up-split painter 4) 400 400) sicp::*identity-frame*))
