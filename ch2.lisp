@@ -1546,3 +1546,51 @@
   (make-frame (make-vect 0.0 0.0)
               (make-vect 1.0 0.0)
               (make-vect 0.0 1.0)))
+
+;; *Exercise 2.53:* What would the interpreter print in response to evaluating
+;; each of the following expressions?
+
+;;      (list 'a 'b 'c)
+
+;;      (list (list 'george))
+
+;;      (cdr '((x1 x2) (y1 y2)))
+
+;;      (cadr '((x1 x2) (y1 y2)))
+
+;;      (consp (car '(a short list)))
+
+;;      (member 'red '((red shoes) (blue socks)))
+
+;;      (member 'red '(red shoes blue socks))
+
+;; *Exercise 2.54:* Two lists are said to be `equal?' if they contain equal
+;; elements arranged in the same order.  For example,
+
+;;      (equal? '(this is a list) '(this is a list))
+
+;; is true, but
+
+;;      (equal? '(this is a list) '(this (is a) list))
+
+;; is false.  To be more precise, we can define `equal?'  recursively in terms
+;; of the basic `eq?' equality of symbols by saying that `a' and `b' are
+;; `equal?' if they are both symbols and the symbols are `eq?', or if they are
+;; both lists such that `(car a)' is `equal?'  to `(car b)' and `(cdr a)' is
+;; `equal?' to `(cdr b)'.  Using this idea, implement `equal?' as a
+;; procedure.(5)
+(defun equal? (lst1 lst2)
+  (let ((a (car lst1))
+        (b (car lst2)))
+    (cond ((or (null lst1) (null lst2))
+           (and (null lst1) (null lst2)))
+          ((and (consp a) (consp b))
+           (and (equal? a b) (equal? (cdr lst1) (cdr lst2))))
+          (t (and (eql a b) (equal? (cdr lst1) (cdr lst2)))))))
+
+;; *Exercise 2.55:* Eva Lu Ator types to the interpreter the expression
+
+;;      (car ''abracadabra)
+
+;; To her surprise, the interpreter prints back `quote'.  Explain.
+(car (quote (quote abracadabra)))
