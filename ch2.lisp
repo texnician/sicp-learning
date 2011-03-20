@@ -1594,3 +1594,269 @@
 
 ;; To her surprise, the interpreter prints back `quote'.  Explain.
 (car (quote (quote abracadabra)))
+
+;; *Exercise 2.56:* Show how to extend the basic differentiator to handle more
+;; kinds of expressions.  For instance, implement the differentiation rule
+
+;;      n_1   n_2
+;;      --- = ---  if and only if n_1 d_2 = n_2 d_1
+;;      d_1   d_2
+
+;; by adding a new clause to the `deriv' program and defining appropriate
+;; procedures `exponentiation?', `base', `exponent', and `make-exponentiation'.
+;; (You may use the symbol `**' to denote exponentiation.)  Build in the rules
+;; that anything raised to the power 0 is 1 and anything raised to the power 1
+;; is the thing itself.
+(defun deriv (exp var)
+  (fresh-line)
+  (format t "~a" exp)
+  (cond ((numberp exp) 0)
+        ((variablep exp)
+         (if (same-variablep exp var) 1 0))
+        ((sump exp)
+         (make-sum (deriv (addend exp) var)
+                   (deriv (augend exp) var)))
+        ((productp exp)
+         (make-sum
+          (make-product (multiplier exp)
+                        (deriv (multiplicand exp) var))
+          (make-product (deriv (multiplier exp) var)
+                        (multiplicand exp))))
+        ((exponentiationp exp)
+         (make-product 
+          (make-product (exp-exponent exp)
+                        (make-exponentiation (exp-base exp)
+                                             (make-sum (exp-exponent exp) -1)))
+          (deriv (exp-base exp) var)))
+        (t (error "unknown expression type -- DERIV ~a:" exp))))
+
+(defun variablep (x)
+  (symbolp x))
+
+(defun same-variablep (v1 v2)
+  (and (variablep v1) (variablep v2) (eq v1 v2)))
+
+(defun =numberp (exp num)
+  (and (numberp exp) (= exp num)))
+
+(defun make-sum (a1 a2)
+  (cond ((=numberp a1 0) a2)
+        ((=numberp a2 0) a1)
+        ((and (numberp a1) (numberp a2)) (+ a1 a2))
+        (t (list '+ a1 a2))))
+
+(defun make-product (m1 m2)
+  (cond ((or (=numberp m1 0) (=numberp m2 0)) 0)
+        ((=numberp m1 1) m2)
+        ((=numberp m2 1) m1)
+        ((and (numberp m1) (numberp m2)) (* m1 m2))
+        (t (list '* m1 m2))))
+
+(defun sump (x)
+  (and (consp x) (eq (car x) '+)))
+
+(defun addend (s)
+  (cadr s))
+
+(defun augend (s)
+  (if (null (cdddr s))
+      (caddr s)
+      (cons '+ (cddr s))))
+
+(defun productp (s)
+  (and (consp s) (eq (car s) '*)))
+
+(defun multiplier (p) (cadr p))
+
+(defun multiplicand (p)
+  (if (null (cdddr p))
+      (caddr p)
+      (cons '* (cddr p))))
+
+(defun exponentiation (base exponent)
+  (list '^ base exponent))
+
+(defun exponentiationp (exp)
+  (and (consp exp) (eq (car exp) '^)))
+
+(defun exp-base (exp)
+  (cadr exp))
+
+(defun exp-exponent (exp)
+  (caddr exp))
+
+(defun make-exponentiation (base expo)
+  (cond ((=numberp base 0) 0)
+        ((=numberp base 1) 1)
+        ((=numberp expo 0) 1)
+        ((=numberp expo 1) base)
+        ((and (numberp base) (numberp expo)) (expt base expo))
+        (t (list '^ base expo))))
+
+;; *Exercise 2.57:* Extend the differ (cons '* (cddr p))))entiation program to
+;; handle sums and products of arbitrary numbers of (two or more) terms.  Then
+;; the last example above could be expressed as
+
+;;      (deriv '(* x y (+ x 3)) 'x)
+
+;; Try to do this by changing only the representation for sums and products,
+;; without changing the `deriv' procedure at all.  For example, the `addend' of
+;; a sum would be the first term, and the `augend' would be the sum of the rest
+;; of the terms.
+;; Try to do this by changing only the representation for sums and products,
+;; without changing the `deriv' procedure at all.  For example, the `addend' of
+;; a sum would be the first term, and the `augend' would be the sum of the rest
+;; of the terms.
+(defun augend (s)
+  (if (null (cdddr s))
+      (caddr s)
+      (cons '+ (cddr s))))
+
+(defun multiplicand (p)
+  (if (null (cdddr p))
+      (caddr p)
+      (cons '* (cddr p))))
+
+;; *Exercise 2.58:* Suppose we want to modify the differentiation program so
+;; that it works with ordinary mathematical notation, in which `+' and `*' are
+;; infix rather than prefix operators.  Since the differentiation program is
+;; defined in terms of abstract data, we can modify it to work with different
+;; representations of expressions solely by changing the predicates, selectors,
+;; and constructors that define the representation of the algebraic expressions
+;; on which the differentiator is to operate.
+
+;;   a. Show how to do this in order to differentiate algebraic expressions
+;;      presented in infix form, such as `(x + (3 * (x + (y + 2))))'.  To
+;;      simplify the task, assume that `+' and `*' always take two arguments and
+;;      that expressions are fully parenthesized.
+(defun make-sum (a1 a2)
+  (cond ((=numberp a1 0) a2)
+        ((=numberp a2 0) a1)
+        ((and (numberp a1) (numberp a2)) (+ a1 a2))
+        (t (list a1 '+ a2))))
+
+(defun make-product (m1 m2)
+  (cond ((or (=numberp m1 0) (=numberp m2 0)) 0)
+        ((=numberp m1 1) m2)
+        ((=numberp m2 1) m1)
+        ((and (numberp m1) (numberp m2)) (* m1 m2))
+        (t (list m1 '* m2))))
+
+(defun sump (x)
+  (and (consp x) (eq (cadr x) '+)))
+
+(defun addend (s)
+  (car s))
+ 
+(defun augend (s)
+  (caddr s))
+
+(defun productp (s)
+  (and (consp s) (eq (cadr s) '*)))
+
+(defun multiplier (p) (car p))
+
+(defun multiplicand (p)
+  (caddr p))
+
+;;   b. The problem becomes substantially harder if we allow standard algebraic
+;;      notation, such as `(x + 3 * (x + y + 2))', which drops unnecessary
+;;      parentheses and assumes that multiplication is done before addition.
+;;      Can you design appropriate predicates, selectors, and constructors for
+;;      this notation such that our derivative program still works?
+(defun all->list (x)
+  (if (or (listp x) (null x))
+      x
+      (list x)))
+
+(defun make-sum (a1 a2)
+  (cond ((=numberp a1 0) a2)
+        ((=numberp a2 0) a1)
+        ((and (numberp a1) (numberp a2)) (+ a1 a2))
+        (t (append (all->list a1) (cons '+ (all->list a2))))))
+
+(defun make-product (m1 m2)
+  (cond ((or (=numberp m1 0) (=numberp m2 0)) 0)
+        ((=numberp m1 1) m2)
+        ((=numberp m2 1) m1)
+        ((and (numberp m1) (numberp m2)) (* m1 m2))
+        (t (list m1 '* m2))))
+
+(make-sum '((x + 1) * 2) (make-product 3 (make-sum (make-sum 'x 'y) 2)))
+'(a + b)
+'(3 * (a + b) + (c + d))
+;; sum <- atom | product | list + atom | product | list | sum
+;; product <- atom | list * atom | list | product
+;; atom <- number | symbol
+;; list <- '()
+;; 
+'(c + 3 * (a + b))
+
+(defun before-symbol (lst sym)
+  (labels ((iter (acc x)
+             (cond ((null x) nil)
+                   ((eq (car x) sym)
+                    acc)
+                   (t (iter (cons (car x) acc) (cdr x))))))
+    (iter nil lst)))
+
+(defun after-symbol (lst sym)
+  (if (or (null lst) (eq (car lst) sym))
+      (cdr lst)
+      (after-symbol (cdr lst) sym)))
+
+(defun atomp (x)
+  (labels ((p (s)
+             (or (numberp x)
+                 (variablep x)
+                 (listp x))))
+  (cond ((null x) nil)
+        ((consp x) (and (p (car x))
+                        (null (cdr x))))
+        (t (p x)))))
+
+(defun productp (s)
+  (let ((left (before-symbol s '*))
+        (right (after-symbol s '*)))
+    (if (null s)
+        nil
+        (and (atomp left)
+             (or (productp right)
+                 (atomp right))))))
+
+(defun multiplier (p)
+  (let ((left (before-symbol p '*)))
+    (if (null left)
+        nil
+        (car left))))
+
+(defun multiplicand (p)
+  (let ((right (after-symbol p '*)))
+    (if (productp right)
+        right
+        (car right))))
+
+(defun sump (x)
+  (let ((left (before-symbol x '+))
+        (right (after-symbol x '+)))
+    (and (or (productp left)
+             (atomp left))
+         (or (productp right)
+             (atomp right)
+             (sump right)))))
+
+(defun addend (s)
+  (let ((left (before-symbol s '+)))
+    (if (productp left)
+        left
+        (car left))))
+ 
+(defun augend (s)
+  (let ((right (after-symbol s '+)))
+    (if (or (productp right) (sump right))
+        right
+        (car right))))
+
+;(defparameter *tmp* '(x + 3 * (x + y + 2)))
+
+;(deriv *tmp* 'x)
