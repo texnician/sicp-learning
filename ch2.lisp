@@ -1782,16 +1782,10 @@
         ((and (numberp m1) (numberp m2)) (* m1 m2))
         (t (list m1 '* m2))))
 
-(make-sum '((x + 1) * 2) (make-product 3 (make-sum (make-sum 'x 'y) 2)))
-'(a + b)
-'(3 * (a + b) + (c + d))
-;; sum <- atom | product | list + atom | product | list | sum
-;; product <- atom | list * atom | list | product
-;; atom <- number | symbol
-;; list <- '()
+;; sum <- atom | product + atom | product | sum
+;; product <- atom  * atom | product
+;; atom <- number | symbol | list
 ;; 
-'(c + 3 * (a + b))
-
 (defun before-symbol (lst sym)
   (labels ((iter (acc x)
              (cond ((null x) nil)
@@ -1811,8 +1805,7 @@
                  (variablep x)
                  (listp x))))
   (cond ((null x) nil)
-        ((consp x) (and (p (car x))
-                        (null (cdr x))))
+        ((consp x) (and (p (car x)) (null (cdr x))))
         (t (p x)))))
 
 (defun productp (s)
@@ -1820,9 +1813,7 @@
         (right (after-symbol s '*)))
     (if (null s)
         nil
-        (and (atomp left)
-             (or (productp right)
-                 (atomp right))))))
+        (and (atomp left) (or (productp right) (atomp right))))))
 
 (defun multiplier (p)
   (let ((left (before-symbol p '*)))
@@ -1839,11 +1830,8 @@
 (defun sump (x)
   (let ((left (before-symbol x '+))
         (right (after-symbol x '+)))
-    (and (or (productp left)
-             (atomp left))
-         (or (productp right)
-             (atomp right)
-             (sump right)))))
+    (and (or (productp left) (atomp left))
+         (or (productp right) (atomp right) (sump right)))))
 
 (defun addend (s)
   (let ((left (before-symbol s '+)))
