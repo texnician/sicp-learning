@@ -1366,7 +1366,7 @@
   (lambda (painter n)
     (if (= 0 n)
         painter
-        (let (smaller (funcall (painter-split first-split second-split) painter (1- n)))
+        (let ((smaller (funcall (painter-split first-split second-split) painter (1- n))))
           (funcall first-split (funcall second-split smaller smaller))))))
 
 ;; *Exercise 2.46:* A two-dimensional vector v running from the origin to a
@@ -1848,3 +1848,184 @@
 ;(defparameter *tmp* '(x + 3 * (x + y + 2)))
 
 ;(deriv *tmp* 'x)
+
+;; *Exercise 2.59:* Implement the `union-set' operation for the unordered-list
+;; representation of sets.
+(defun element-of-unordered-setp (x set)
+  (cond ((null set) nil)
+        ((eq (car set) x) t)
+        (t (element-of-unordered-setp x (cdr set)))))
+
+(defun adjoin-unordered-set (x set)
+  (if (element-of-unordered-setp x set)
+      set
+      (cons x set)))
+
+(defun intersection-unordered-set (set1 set2)
+  (cond ((or (null set1) (null set2)) nil)
+        ((element-of-unordered-setp (car set1) set2)
+         (cons (car set1) (intersection-unordered-set (cdr set1) set2)))
+        (t (intersection-unordered-set (cdr set1) set2))))
+
+(defun union-unordered-set (set1 set2)
+  (cond ((null set1) set2)
+        ((null set2) set1)
+        ((element-of-unordered-setp (car set1) set2)
+         (union-unordered-set (cdr set1) set2))
+        (t (cons (car set1) (union-unordered-set (cdr set1) set2)))))
+
+;; *Exercise 2.61:* Give an implementation of `adjoin-set' using the ordered
+;; representation.  By analogy with `element-of-set?' show how to take advantage
+;; of the ordering to produce a procedure that requires on the average about
+;; half as many steps as with the unordered representation.
+(defun adjoin-ordered-set (x set)
+  (if (null set)
+      (list x)
+      (let ((x1 (car set)))
+        (cond ((= x x1) set)
+              ((< x x1) (cons x set))
+              (t (cons x1 (adjoin-ordered-set x (cdr set))))))))
+
+;; *Exercise 2.62:* Give a [theta](n) implementation of `union-set' for sets
+;; represented as ordered lists.
+(defun union-ordered-set (set1 set2)
+  (cond ((null set1) set2)
+        ((null set2) set1)
+        (t (let ((x1 (car set1))
+                 (x2 (car set2)))
+             (cond ((= x1 x2) (cons x1 (union-ordered-set (cdr set1) (cdr set2))))
+                   ((< x1 x2) (cons x1 (union-ordered-set (cdr set1) set2)))
+                   ((< x2 x1) (cons x2 (union-ordered-set set1 (cdr set2)))))))))
+
+;; *Exercise 2.63:* Each of the following two procedures converts a
+;; binary tree to a list.
+
+;;      (define (tree->list-1 tree)
+;;        (if (null? tree)
+;;            '()
+;;            (append (tree->list-1 (left-branch tree))
+;;                    (cons (entry tree)
+;;                          (tree->list-1 (right-branch tree))))))
+
+;;      (define (tree->list-2 tree)
+;;        (define (copy-to-list tree result-list)
+;;          (if (null? tree)
+;;              result-list
+;;              (copy-to-list (left-branch tree)
+;;                            (cons (entry tree)
+;;                                  (copy-to-list (right-branch tree)
+;;                                                result-list)))))
+;;        (copy-to-list tree '()))
+
+;;   a. Do the two procedures produce the same result for every tree?
+;;      If not, how do the results differ?  What lists do the two
+;;      procedures produce for the trees in *note Figure 2-16::?
+(defun entry (tree)
+  (car tree))
+
+(defun left-branch (tree)
+  (cadr tree))
+
+(defun right-branch (tree)
+  (caddr tree))
+
+(defun tree->list-1 (tree)
+  (if (null tree)
+      nil
+      (append (tree->list-1 (left-branch tree))
+              (cons (entry tree)
+                    (tree->list-1 (right-branch tree))))))
+
+(defun tree->list-2 (tree)
+  (labels ((copy-to-list (tree acc)
+             (if (null tree)
+                 acc
+                 (copy-to-list (left-branch tree)
+                               (cons (entry tree)
+                                     (copy-to-list (right-branch tree) acc))))))
+    (copy-to-list tree nil)))
+;; '(1 5 3 7 9 11)
+
+;;   b. Do the two procedures have the same order of growth in the
+;;      number of steps required to convert a balanced tree with n
+;;      elements to a list?  If not, which one grows more slowly?
+
+;; Yes, both O(n)
+
+;; *Exercise 2.64:* The following procedure `list->tree' converts an ordered
+;; list to a balanced binary tree.  The helper procedure `partial-tree' takes as
+;; arguments an integer n and list of at least n elements and constructs a
+;; balanced tree containing the first n elements of the list.  The result
+;; returned by `partial-tree' is a pair (formed with `cons') whose `car' is the
+;; constructed tree and whose `cdr' is the list of elements not included in the
+;; tree.
+
+;;      (define (list->tree elements)
+;;        (car (partial-tree elements (length elements))))
+
+;;      (define (partial-tree elts n)
+;;        (if (= n 0)
+;;            (cons '() elts)
+;;            (let ((left-size (quotient (- n 1) 2)))
+;;              (let ((left-result (partial-tree elts left-size)))
+;;                (let ((left-tree (car left-result))
+;;                      (non-left-elts (cdr left-result))
+;;                      (right-size (- n (+ left-size 1))))
+;;                  (let ((this-entry (car non-left-elts))
+;;                        (right-result (partial-tree (cdr non-left-elts)
+;;                                                    right-size)))
+;;                    (let ((right-tree (car right-result))
+;;                          (remaining-elts (cdr right-result)))
+;;                      (cons (make-tree this-entry left-tree right-tree)
+;;                            remaining-elts))))))))
+
+;;   a. Write a short paragraph explaining as clearly as you can how
+;;      `partial-tree' works.  Draw the tree produced by `list->tree' for the
+;;      list `(1 3 5 7 9 11)'.
+(defun partial-tree (elts n)
+  (if (= 0 n)
+      (cons nil elts)
+      (let* ((left-size (floor (/ (1- n) 2)))
+             (left-result (partial-tree elts left-size))
+             (left-tree (car left-result))
+             (rest-elts (cdr left-result))
+             (right-size (- n left-size 1))
+             (this-entry (car rest-elts))
+             (right-result (partial-tree (cdr rest-elts) right-size))
+             (right-tree (car right-result))
+             (remaining-elts (cdr right-result)))
+        (cons (list this-entry left-tree right-tree)
+              remaining-elts))))
+
+(defun list->tree (lst)
+  (car (partial-tree lst (length lst))))
+;(list->tree '(1 3 5 7 9 11))
+
+;;   b. What is the order of growth in the number of steps required by
+;;      `list->tree' to convert a list of n elements?
+;; O(n)
+
+;; *Exercise 2.65:* Use the results of Exercise 2-63:: and Exercise 2-64:: to
+;; *give [theta](n) implementations of `union-set' and `intersection-set' for
+;; *sets implemented as (balanced) binary trees.(5)
+(defun intersection-ordered-set (set1 set2)
+  (if (or (null set1) (null set2))
+      nil
+      (let ((x1 (car set1))
+            (x2 (car set2)))
+        (cond ((= x1 x2) (cons x1 (intersection-ordered-set (cdr set1) (cdr set2))))
+              ((< x1 x2) (intersection-ordered-set (cdr set1) set2))
+              (t (intersection-ordered-set set1 (cdr set2)))))))
+
+
+(defparameter *tree1* '(5 (2 (1 nil nil) (3 nil nil)) (13 (8 nil nil) (21 nil nil))))
+(defparameter *tree2* '(5 (1 nil (3 nil nil)) (9 (7 nil nil) (11 nil nil))))
+
+(defun union-binary-tree-set (set1 set2)
+  (list->tree (union-ordered-set (tree->list-1 set1) (tree->list-2 set2))))
+
+(defun intersection-binary-tree-set (set1 set2)
+  (list->tree (intersection-ordered-set (tree->list-2 set1) (tree->list-1 set2))))
+
+;(tree->list-1 (union-binary-tree-set *tree1* *tree2*))
+;(tree->list-2 (intersection-binary-tree-set *tree1* *tree2*))
