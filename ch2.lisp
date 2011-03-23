@@ -1283,15 +1283,15 @@
 (defun queen-no-same-rowp (row rest-queens)
   (if (null rest-queens)
       t
-      (and (not (= row (car (car rest-queens))))
+      (and (not (= row (caar rest-queens)))
            (queen-no-same-rowp row (cdr rest-queens)))))
 
 (defun queen-no-same-diagonalp (row col rest-queens)
   (labels ((iter (acc q)
              (if (or (null acc) (null q))
                  acc
-                 (iter (and (not (= (abs (- row (car (car q))))
-                                    (- col (cadr (car q)))))
+                 (iter (and (not (= (abs (- row (caar q)))
+                                    (- col (cadar q))))
                                  acc)
                        (cdr q)))))
            (iter t rest-queens)))
@@ -2226,7 +2226,7 @@
 ;; Sketch the tree for n=5 for n=10.  In such a tree (for general n) how may
 ;; bits are required to encode the most frequent symbol?  the least frequent
 ;; symbol?
-(defun test-huffman-freq (n)
+(defun test-huffman-bits-length (n)
   (let ((tree
          (generate-huffman-tree (accumulate #'cons nil #'(lambda (x)
                                                            (let ((e (expt 2 x)))
@@ -2235,5 +2235,5 @@
     (list (length (huffman-encode (list (1- n)) tree))
           (length (huffman-encode '(0) tree)))))
 
-; (test-huffman-freq 5) => (1 4)
-; (test-huffman-freq 10) => (1 9)
+; (test-huffman-bits-length 5) => (1 4)
+; (test-huffman-bits-length 10) => (1 9)
