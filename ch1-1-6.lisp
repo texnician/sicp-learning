@@ -1,6 +1,7 @@
 ;; Define SICP package
 (defpackage :sicp
-  (:use :common-lisp))
+  (:use :common-lisp)
+  (:export :sicp))
 
 (in-package :sicp)
 
@@ -312,6 +313,18 @@
         ((eq k n) 1)
         (t (+ (pascal-triangle (1- n) (1- k))
               (pascal-triangle (1- n) k)))))
+
+
+(defun pascal-triangle-2 (n k)
+  (labels ((adj-add (lst)
+             (cond ((null (car lst)) nil)
+                   ((null (cdr lst)) '(1))
+                   (t (cons (+ (car lst) (cadr lst)) (adj-add (cdr lst))))))
+           (iter (acc row)
+             (if (= row n)
+                 acc
+                 (iter (cons 1 (adj-add acc)) (1+ row)))))
+    (nth (1- k) (iter '(1) 1))))
 
 ;; Exercise 1.16.  Design a procedure that evolves an iterative exponentiation
 ;; process that uses successive squaring and uses a logarithmic number of steps,
