@@ -2237,3 +2237,109 @@
 
 ; (test-huffman-bits-length 5) => (1 4)
 ; (test-huffman-bits-length 10) => (1 9)
+
+(defun sicp-put (sym prop val)
+  (setf (getf (symbol-plist sym) prop) val))
+
+(defun sicp-get (sym prop)
+  (let ((plist (symbol-plist sym)))
+    (labels ((iter (lst)
+               (if (or (null lst) (equal (car lst) prop))
+                   (cadr lst)
+                   (iter (cddr lst)))))
+      (iter plist))))
+
+(defun attach-tag (tag x)
+  (cons tag x))
+
+(defun type-tag (x)
+  (if (consp x)
+      (car x)
+      (error "Bad tagged datum ~a" x)))
+
+(defun type-contents (x)
+  (if (consp x)
+      (cdr x)
+      (error "Bad tagged datum ~a" x)))
+
+(defun install-rectangular-package ()
+  (labels ((real-part (z)
+             (car z))
+           (imag-part (z)
+             (cdr z))
+           (make-from-real-imag (x y)
+             (cons x y))
+           (magnitude (z)
+             (sqrt (+ (square (real-part z))
+                      (square (imag-part z)))))
+           (angle (z)
+             (atan (imag-part z) (real-part z)))
+           (make-from-mag-ang (r a)
+             (cons (* r (cos a)) (* r (sin a))))
+           (tag (x)
+             (attach-tag 'rectangular x)))
+    (sicp-put 'real-part '(rectangular) #'real-part)
+    (sicp-put 'imag-part '(rectangular) #'imag-part)
+    (sicp-put 'magnitude '(rectangular) #'magnitude)
+    (sicp-put 'angle '(rectangular) #'angle)
+    (sicp-put 'make-from-real-imag 'rectangular
+         #'(lambda (x y) (tag (make-from-real-imag x y))))
+    (sicp-put 'make-from-mag-ang 'rectangular
+         #'(lambda (r a) (tag (make-from-mag-ang r a))))
+    'done))
+
+(defun install-polar-package ()
+  (labels ((magnitude (z)
+             (car z))
+           (angle (z)
+             (cdr z))
+           (make-from-mag-ang (r a)
+             (cons r a))
+           (real-part (z)
+             (* (magnitude z) (cos (angle z))))
+           (imag-part (z)
+             (* (magnitude z) (sin (angle z))))
+           (make-from-real-imag (x y)
+             (cons (sqrt (+ (square x) (square y)))
+                   (atan y x)))
+           (tag (x)
+             (attach-tag 'polar x)))
+    (sicp-put 'real-part '(polar) #'real-part)
+    (sicp-put 'imag-part '(polar) #'imag-part)
+    (sicp-put 'magnitude '(polar) #'magnitude)
+    (sicp-put 'angle '(polar) #'angle)
+    (sicp-put 'make-from-real-imag 'polar
+         #'(lambda (x y) (tag (make-from-real-imag x y))))
+    (sicp-put 'make-from-mag-ang 'polar
+         #'(lambda (r a) (tag (make-from-mag-ang r a))))
+    'done))
+
+(defun apply-generic (op &rest args)
+  (let* ((type-tags (mapcar #'type-tag args))
+         (proc (sicp-get op type-tags)))
+    (if proc
+        (apply proc (mapcar #'type-contents args))
+        (error "No method for these types -- APPLY-GENERIC ~a"
+               (list op type-tags)))))
+
+(defun real-part (z)
+  (apply-generic 'real-part z))
+
+(defun imag-part (z)
+  (apply-generic 'imag-part z))
+
+(defun magnitude (z)
+  (apply-generic 'magnitude z))
+
+(defun angle (z)
+  (apply-generic 'angle z))
+
+(defun make-from-real-imag (x y)
+  (funcall (sicp-get 'make-from-real-imag 'rectangular) x y))
+
+(defun make-from-mag-ang (r a)
+  (funcall (sicp-get 'make-from-mag-ang 'polar) r a))
+
+
+(install-polar-package)
+(install-rectangular-package)
