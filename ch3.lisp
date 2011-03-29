@@ -74,13 +74,15 @@
 ;;      "Incorrect password"
 (defun make-account (balance password)
   (lambda (pwd op)
-    (if (not (eq pwd password))
-        (error "Incorrect password")
-        (let ((f (cond ((eq op 'withdraw) #'-)
-                       ((eq op 'deposit) #'+))))
-          (lambda (x)
-            (setf balance (funcall f balance x))
-             balance)))))
+    (cond ((not (eq pwd password))
+           (error "Incorrect password"))
+          ((eq op 'make-joint) t)
+          (t 
+           (let ((f (cond ((eq op 'withdraw) #'-)
+                          ((eq op 'deposit) #'+))))
+             (lambda (x)
+               (setf balance (funcall f balance x))
+               balance))))))
 
 (defparameter *test-account* (make-account 100 'not-secret-password))
 (funcall (funcall *test-account* 'not-secret-password 'withdraw) 40)
@@ -178,3 +180,58 @@
        expt-r)))
 
 ;(time (mote-carlo-pi 50000000))
+
+;; *Exercise 3.7:* Consider the bank account objects created by `make-account',
+;; with the password modification described in *note Exercise 3-3::.  Suppose
+;; that our banking system requires the ability to make joint accounts.  Define
+;; a procedure `make-joint' that accomplishes this.  `Make-joint' should take
+;; three arguments.  The first is a password-protected account.  The second
+;; argument must match the password with which the account was defined in order
+;; for the `make-joint' operation to proceed.  The third argument is a new
+;; password.  `Make-joint' is to create an additional access to the original
+;; account using the new password.  For example, if `peter-acc' is a bank
+;; account with password `open-sesame', then
+
+;;      (define paul-acc
+;;        (make-joint peter-acc 'open-sesame 'rosebud))
+
+;; will allow one to make transactions on `peter-acc' using the name `paul-acc'
+;; and the password `rosebud'.  You may wish to modify your solution to see
+;; Exercise 3-3 to accommodate this new feature
+
+(defun make-joint (account password other-password)
+  (if (funcall account password 'make-joint)
+      (lambda (pwd op)
+        (if (eq pwd other-password)
+            (funcall account password op)
+            (error "Incorrect joint account password")))
+      nil))
+
+(defparameter *paul-acc*
+  (make-joint *test-account* 'not-secret-password 'rosebud))
+
+;(funcall (funcall *test-account* 'rosebud 'withdraw) 10)
+
+;(funcall (funcall *paul-acc* 'rosebud 'deposit) 200)
+
+;; *Exercise 3.8:* When we defined the evaluation model in section *note 1-1-3,
+;; we said that the first step in evaluating an expression is to evaluate its
+;; subexpressions.  But we never specified the order in which the subexpressions
+;; should be evaluated (e.g., left to right or right to left).  When we
+;; introduce assignment, the order in which the arguments to a procedure are
+;; evaluated can make a difference to the result. Define a simple procedure `f'
+;; such that evaluating `(+ (f 0) (f 1))' will return 0 if the arguments to `+'
+;; are evaluated from left to right but will return 1 if the arguments are
+;; evaluated from right to left.
+(defun make-simple-f ()
+  (let ((state 0))
+    (lambda (x)
+      (let ((prev state))
+        (if (not (= state x))
+            (progn (setf state x)
+                   prev)
+            0)))))
+
+(let ((f (make-simple-f)))
+  (assert (= (+ (funcall f 0) (funcall f 1)) 0))
+  (assert (= (+ (funcall f 1) (funcall f 0)) 1)))
