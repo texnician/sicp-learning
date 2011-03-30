@@ -235,3 +235,5 @@
 (let ((f (make-simple-f)))
   (assert (= (+ (funcall f 0) (funcall f 1)) 0))
   (assert (= (+ (funcall f 1) (funcall f 0)) 1)))
+
+;(step (test-f '(1 2 3 4 5)))

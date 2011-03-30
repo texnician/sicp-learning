@@ -1301,7 +1301,7 @@
 ;; Exercise 2.43.  Louis Reasoner is having a terrible time doing exercise
 ;; 2.42. His queens procedure seems to work, but it runs extremely
 ;; slowly. (Louis never does manage to wait long enough for it to solve even the
-;; 6กม 6 case.) When Louis asks Eva Lu Ator for help, she points out that he has
+;; 6ยกร 6 case.) When Louis asks Eva Lu Ator for help, she points out that he has
 ;; interchanged the order of the nested mappings in the flatmap, writing it as
 
 ;; (flatmap
