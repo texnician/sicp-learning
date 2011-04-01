@@ -270,3 +270,45 @@
 
 ;(defparameter *v* '(a b c d))
 ;(defparameter *w* (mystery *v*))
+
+(defparameter *x* '(a b))
+(defparameter *z1* (cons *x* *x*))
+(defparameter *z2* (cons '(a b) '(a b)))
+
+(defun count-pairs (x)
+  (if (not (consp x))
+      0
+      (+ (count-pairs (car x))
+         (count-pairs (cdr x))
+         1)))
+
+(count-pairs *x*)
+(count-pairs *z2*)
+(count-pairs *z1*)
+
+(defun count-pairs-1 (x)
+  (let ((marks nil))
+    (labels ((iter (x)
+               (if (not (consp x))
+                   0
+                   (+ (iter (car x))
+                      (iter (cdr x))
+                      (if (member x marks)
+                          0
+                          (progn (setf marks (cons x marks))
+                                 1))))))
+      (iter x))))
+
+(defun count-pairs-2 (x)
+  (labels ((iter (acc x)
+             (if (not (consp x))
+                 acc
+                 (if (member x acc)
+                     (iter (iter acc (car x)) (cdr x))
+                     (iter (iter (cons x acc) (car x)) (cdr x))))))
+    (length (iter nil x))))
+
+
+(count-pairs-2 *x*)
+(count-pairs-2 *z2*)
+(count-pairs-2 *z1*)
