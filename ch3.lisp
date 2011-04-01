@@ -179,7 +179,7 @@
                                       x1 x2 y1 y2) trials))
        expt-r)))
 
-;(time (mote-carlo-pi 50000000))
+;(time (mote-carlo-pi 5000000))
 
 ;; *Exercise 3.7:* Consider the bank account objects created by `make-account',
 ;; with the password modification described in *note Exercise 3-3::.  Suppose
@@ -392,5 +392,5 @@
                    (t (iter (cdr slow) (cddr fast))))))
     (iter lst (cddr lst))))
 
-;(smart-cyclep (make-p-cycle '(f g h i j) '(1 2 3 a b c d f g))
+;(smart-cyclep (make-p-cycle '(f g h i j) '(1 2 3 a b c d f g)))
 ;(smart-cyclep (make-cycle '(a)))
