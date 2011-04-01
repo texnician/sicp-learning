@@ -251,14 +251,43 @@
 (defparameter *nz* (append *nx* *ny*))
 (defparameter *nw* (nappend *nx* *ny*))
 
-;; 3.13
+;; *Exercise 3.13:* Consider the following `make-cycle' procedure, which uses
+;; the `last-pair' procedure defined in *note Exercise 3-12:::
+
+;;      (define (make-cycle x)
+;;        (set-cdr! (last-pair x) x)
+;;        x)
+
+;; Draw a box-and-pointer diagram that shows the structure `z' created by
+
+;;      (define z (make-cycle (list 'a 'b 'c)))
+
+;; What happens if we try to compute `(last-pair z)'?
 (defun make-cycle (x)
   (setf (cdr (last-pair x)) x)
   x)
 
 ;(defparameter *nz* (make-cycle '(a b c)))
 
-;; 3.14
+;; *Exercise 3.14:* The following procedure is quite useful, although obscure:
+
+;;      (define (mystery x)
+;;        (define (loop x y)
+;;          (if (null? x)
+;;              y
+;;              (let ((temp (cdr x)))
+;;                (set-cdr! x y)
+;;                (loop temp x))))
+;;        (loop x '()))
+
+;; `Loop' uses the "temporary" variable `temp' to hold the old value of the
+;; `cdr' of `x', since the `set-cdr!'  on the next line destroys the `cdr'.
+;; Explain what `mystery' does in general.  Suppose `v' is defined by `(define v
+;; (list 'a 'b 'c 'd))'. Draw the box-and-pointer diagram that represents the
+;; list to which `v' is bound.  Suppose that we now evaluate `(define w (mystery
+;; v))'. Draw box-and-pointer diagrams that show the structures `v' and `w'
+;; after evaluating this expression.  What would be printed as the values of `v'
+;; and `w'?
 (defun mystery (x)
   (labels ((iter (x y)
              (if (null x)
@@ -275,6 +304,23 @@
 (defparameter *z1* (cons *x* *x*))
 (defparameter *z2* (cons '(a b) '(a b)))
 
+;; *Exercise 3.16:* Ben Bitdiddle decides to write a procedure to count the
+;; number of pairs in any list structure.  "It's easy," he reasons.  "The number
+;; of pairs in any structure is the number in the `car' plus the number in the
+;; `cdr' plus one more to count the current pair."  So Ben writes the following
+;; procedure:
+
+;;      (define (count-pairs x)
+;;        (if (not (pair? x))
+;;            0
+;;            (+ (count-pairs (car x))
+;;               (count-pairs (cdr x))
+;;               1)))
+
+;; Show that this procedure is not correct.  In particular, draw box-and-pointer
+;; diagrams representing list structures made up of exactly three pairs for
+;; which Ben's procedure would return 3; return 4; return 7; never return at
+;; all.
 (defun count-pairs (x)
   (if (not (consp x))
       0
@@ -286,6 +332,11 @@
 (count-pairs *z2*)
 (count-pairs *z1*)
 
+;; *Exercise 3.17:* Devise a correct version of the `count-pairs' procedure of
+;; *note Exercise 3-16:: that returns the number of distinct pairs in any
+;; structure.  (Hint: Traverse the structure, maintaining an auxiliary data
+;; structure that is used to keep track of which pairs have already been
+;; counted.)
 (defun count-pairs-1 (x)
   (let ((marks nil))
     (labels ((iter (x)
@@ -312,3 +363,34 @@
 (count-pairs-2 *x*)
 (count-pairs-2 *z2*)
 (count-pairs-2 *z1*)
+
+;; *Exercise 3.18:* Write a procedure that examines a list and determines
+;; whether it contains a cycle, that is, whether a program that tried to find
+;; the end of the list by taking successive `cdr's would go into an infinite
+;; loop.  *note Exercise 3-13:: constructed such lists.
+(defun cyclep (lst)
+  (labels ((iter (acc x)
+             (cond ((null x) nil)
+                   ((member (car x) acc) t)
+                   (t (iter (cons (car x) acc) (cdr x))))))
+    (iter nil lst)))
+
+(defun make-p-cycle (handler cycle)
+  (setf (cdr (last-pair handler)) (make-cycle cycle))
+  handler)
+
+(cyclep (make-p-cycle '(f g h) '(a b c d e)))
+
+;; *Exercise 3.19:* Redo *note Exercise 3-18:: using an algorithm that takes
+;; only a constant amount of space.  (This requires a very clever idea.)
+;(defun smart-cyclep (lst)
+(defun smart-cyclep (lst)
+  (labels ((iter (slow fast)
+             (cond ((or (null slow) (null fast) (null (cdr fast)))
+                    nil)
+                   ((eq slow fast) (car slow))
+                   (t (iter (cdr slow) (cddr fast))))))
+    (iter lst (cddr lst))))
+
+;(smart-cyclep (make-p-cycle '(f g h i j) '(1 2 3 a b c d f g))
+;(smart-cyclep (make-cycle '(a)))
