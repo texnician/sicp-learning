@@ -237,3 +237,36 @@
   (assert (= (+ (funcall f 1) (funcall f 0)) 1)))
 
 ;(step (test-f '(1 2 3 4 5)))
+(defun nappend (x y)
+  (setf (cdr (last-pair x)) y)
+  x)
+
+(defun last-pair (x)
+  (if (null (cdr x))
+      x
+      (last-pair (cdr x))))
+
+(defparameter *nx* '(a b))
+(defparameter *ny* '(c d))
+(defparameter *nz* (append *nx* *ny*))
+(defparameter *nw* (nappend *nx* *ny*))
+
+;; 3.13
+(defun make-cycle (x)
+  (setf (cdr (last-pair x)) x)
+  x)
+
+;(defparameter *nz* (make-cycle '(a b c)))
+
+;; 3.14
+(defun mystery (x)
+  (labels ((iter (x y)
+             (if (null x)
+                 y
+                 (let ((temp (cdr x)))
+                   (setf (cdr x) y)
+                   (iter temp x)))))
+    (iter x nil)))
+
+;(defparameter *v* '(a b c d))
+;(defparameter *w* (mystery *v*))
