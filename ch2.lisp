@@ -781,7 +781,7 @@
              (= (* weight-length1 weight1) (* weight-length2 weight2)))
            (mobile-weight-balancep (weight-length weight mobi-length mobi)
              (and (= (* weight-length weight) (* mobi-length (total-weight mobi)))
-                  (mobile-balancep (mobi))))
+                  (mobile-balancep mobi)))
            (balance-iter (lbr rbr)
              (let ((lst (branch-structure lbr))
                    (ll (branch-length lbr))
@@ -795,15 +795,14 @@
                       (mobile-weight-balancep ll lst rl rst))
                      ((and (mobilep lst) (not (mobilep rst)))
                       ;; mobile weight
-                      (mobile-weight-balancep #'balance-iter rl rst
-                                              ll lst))
+                      (mobile-weight-balancep rl rst ll lst))
                      (t
                       ;; mobile mobile
                       (and (= (* ll (total-weight lst)) (* rl (total-weight rst)))
                            (and (mobile-balancep lst) (mobile-balancep rst))))))))
     (balance-iter (left-branch mobile) (right-branch mobile))))
 
-; (mobile-balancep *m*)
+; (step (mobile-balancep *m*))
 ; (mobile-balancep '((3 ((1 3) (3 1))) (4 ((2 1) (1 2)))))
 ;;   d. Suppose we change the representation of mobiles so that the constructors
 ;;      are
