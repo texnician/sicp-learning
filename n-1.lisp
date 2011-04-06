@@ -1,23 +1,23 @@
-(defparameter *raidx* 10)
+(defparameter *radix* 10)
 
 (defun n-e (n)
-  (if (< n *raidx*)
+  (if (< n *radix*)
       0
-      (1+ (n-e (floor (/ n *raidx*))))))
+      (1+ (n-e (floor (/ n *radix*))))))
 
 (defun left-most (n)
-  (floor (/ n (expt *raidx* (n-e n)))))
+  (floor (/ n (expt *radix* (n-e n)))))
 
 
 (defun n-1 (n)
   (let* ((e (n-e n))
          (lm (left-most n))
-         (k (expt *raidx* e))
+         (k (expt *radix* e))
          (rmd (mod n k)))
     (cond ((= n 0) 0)
-          ((< n *raidx*) 1)
-          ((= (1- (expt *raidx* (1+ e))) n)
-           (* (1+ e) (expt *raidx* e)))
+          ((< n *radix*) 1)
+          ((= (1- (expt *radix* (1+ e))) n)
+           (* (1+ e) (expt *radix* e)))
           ((= lm 1)
            (+ (1+ rmd) (n-1 (1- k)) (n-1 rmd)))
           (t (+ k (* lm (n-1 (1- k)))
