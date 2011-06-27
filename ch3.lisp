@@ -548,3 +548,108 @@
 ;; `rear-delete-deque!'.  Show how to represent deques using pairs, and give
 ;; implementations of the operations.(2) All operations should be accomplished
 ;; in [theta](1) steps.
+(defun make-deque-node (item)
+  (cons item (cons nil nil)))
+
+(defun get-deque-node-item (node)
+  (car node))
+
+(defun deque-node-next (node)
+  (cddr node))
+
+(defun deque-node-prev (node)
+  (cadr node))
+
+(defun set-deque-node-next! (node next-node)
+  (setf (cddr node) next-node)
+  (get-deque-node-item node))
+
+(defun set-deque-node-prev! (node prev-node)
+  (setf (cadr node) prev-node)
+  (get-deque-node-item node))
+
+(defun link-deque-node (node1 node2)
+  (set-deque-node-next! node1 node2)
+  (set-deque-node-prev! node2 node1))
+
+(defun deque2lst (head)
+  (let ((lst nil))
+    (if (null head)
+        lst
+        (cons (get-deque-node-item head) (deque2lst (deque-node-next head))))))
+
+(defun deque2lst-reverse (head)
+  (let ((lst nil))
+    (if (null head)
+        lst
+        (cons (get-deque-node-item head) (deque2lst-reverse (deque-node-prev head))))))
+;; (deque-node-next *dnd1*)
+;; (deque-node-next *dnd2*)
+;; ;; (setf *dnd2* nil)
+;; ;; (defparameter *dnd1* (make-deque-node 'a))
+;; ;; (defparameter *dnd2* (make-deque-node 'b))
+;; (setf *dnd1* (make-deque-node 'a))
+;; (setf *dnd2* (make-deque-node 'b))
+;; (deque2lst *dnd1*)
+;; (deque2lst *dnd2*)
+;; (deque2lst-reverse *dnd2*)
+;; (setf *dnd1* nil)
+;; (setf *dnd2* nil)
+;; (set-deque-node-next! *dnd1* *dnd2*)
+;; (link-deque-node *dnd1* *dnd2*)
+;; (get-deque-node-item (deque-node-prev *dnd2*))
+(defun make-deque ()
+  (cons nil nil))
+
+(defun empty-dequep (deque)
+  (null (front-ptr deque)))
+
+(defun front-deque (deque)
+  (get-deque-node-item (front-ptr deque)))
+
+(defun rear-deque (deque)
+  (get-deque-node-item (rear-ptr deque)))
+
+(defun front-insert-deque! (deque item)
+  (let ((new-pair (make-deque-node item)))
+    (cond ((empty-dequep deque)
+           (set-front-ptr! deque new-pair)
+           (set-rear-ptr! deque new-pair))
+          (t (link-deque-node new-pair (front-ptr deque))
+             (set-front-ptr! deque new-pair)))
+    (deque2lst (front-ptr deque))))
+
+(defun rear-insert-deque! (deque item)
+  (let ((new-pair (make-deque-node item)))
+    (cond ((empty-dequep deque)
+           (set-front-ptr! deque new-pair)
+           (set-rear-ptr! deque new-pair))
+          (t (link-deque-node (rear-ptr deque) new-pair)
+             (set-rear-ptr! deque new-pair)))
+    (deque2lst (front-ptr deque))))
+
+(defun front-delete-deque! (deque)
+  (cond ((empty-dequep deque)
+         (error "FRONT-DELETE-DEQUE called with empty deque" deque))
+        (t (set-front-ptr! deque (deque-node-next (front-ptr deque)))
+           (deque2lst (front-ptr deque)))))
+
+(defun rear-delete-deque! (deque)
+  (cond ((empty-dequep deque)
+         (error "REAR-DELETE-DEQUE called with empty deque" deque))
+        (t (set-rear-ptr! deque (deque-node-prev (rear-ptr deque)))
+           (deque2lst (front-ptr deque)))))
+
+(defun print-deque (deque)
+  (print (deque2lst (front-ptr deque))))
+
+(defparameter *dq1*  (make-deque))
+(front-insert-deque! *dq1* 'a)
+(front-insert-deque! *dq1* 'b)
+(front-insert-deque! *dq1* 'c)
+(rear-insert-deque! *dq1* '3)
+(rear-insert-deque! *dq1* '2)
+(rear-insert-deque! *dq1* '1)
+(front-delete-deque! *dq1*)
+(rear-delete-deque! *dq1*)
+(print-deque *dq1*)
