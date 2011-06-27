@@ -392,5 +392,91 @@
                    (t (iter (cdr slow) (cddr fast))))))
     (iter lst (cddr lst))))
 
-;(smart-cyclep (make-p-cycle '(f g h i j) '(1 2 3 a b c d f g)))
+;(smart-cyclep (make-p-cycle '(f g h i j k) '(1 2 3 a b c d f l)))
 ;(smart-cyclep (make-cycle '(a)))
+
+;; *Exercise 3.21:* Ben Bitdiddle decides to test the queue implementation
+;; described above.  He types in the procedures to the Lisp interpreter and
+;; proceeds to try them out:
+
+;;      (define q1 (make-queue))
+
+;;      (insert-queue! q1 'a)
+;;      ((a) a)
+
+;;      (insert-queue! q1 'b)
+;;      ((a b) b)
+
+;;      (delete-queue! q1)
+;;      ((b) b)
+
+;;      (delete-queue! q1)
+;;      (() b)
+
+;; "It's all wrong!" he complains.  "The interpreter's response shows that the
+;; last item is inserted into the queue twice.  And when I delete both items,
+;; the second `b' is still there, so the queue isn't empty, even though it's
+;; supposed to be."  Eva Lu Ator suggests that Ben has misunderstood what is
+;; happening.  "It's not that the items are going into the queue twice," she
+;; explains.  "It's just that the standard Lisp printer doesn't know how to make
+;; sense of the queue representation.  If you want to see the queue printed
+;; correctly, you'll have to define your own print procedure for queues."
+;; Explain what Eva Lu is talking about.  In particular, show why Ben's examples
+;; produce the printed results that they do.  Define a procedure `print-queue'
+;; that takes a queue as input and prints the sequence of items in the queue.
+(defmacro set-car! (form value)
+  `(setf (car ,form) ,value))
+
+(defmacro set-cdr! (form value)
+  `(setf (cdr ,form) ,value))
+
+(defun make-queue ()
+  (cons '() '()))
+
+(defun front-ptr (queue)
+  (car queue))
+
+(defun rear-ptr (queue)
+  (cdr queue))
+
+(defun set-front-ptr! (queue item)
+  (set-car! queue item))
+
+(defun set-rear-ptr! (queue item)
+  (set-cdr! queue item))
+
+(defun empty-queuep (queue)
+  (null (front-ptr queue)))
+
+(defun front-queue (queue)
+  (if (empty-queuep queue)
+      (error "FRONT called with an empty queue" queue)
+      (car (front-ptr queue))))
+
+(defun insert-queue! (queue item)
+  (let ((new-pair (cons item nil)))
+    (cond ((empty-queuep queue)
+           (set-front-ptr! queue new-pair)
+           (set-rear-ptr! queue new-pair))
+          (t (set-cdr! (rear-ptr queue) new-pair)
+             (set-rear-ptr! queue new-pair)))
+    queue))
+
+(defun delete-queue! (queue)
+  (cond ((empty-queuep queue)
+         (error "DELETE! called with an empty queue" queue))
+        (t (set-front-ptr! queue (cdr (front-ptr queue)))
+           queue)))
+
+(defun print-queue (queue)
+  (cond ((empty-queuep queue)
+         (print nil))
+        (t (print (front-ptr queue)))))
+
+(defparameter *q1* (make-queue))
+(insert-queue! *q1* 'a)
+(insert-queue! *q1* 'b)
+(delete-queue! *q1*)
+(delete-queue! *q1*)
+
+(print-queue *q1*)
