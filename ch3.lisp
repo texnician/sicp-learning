@@ -480,3 +480,71 @@
 (delete-queue! *q1*)
 
 (print-queue *q1*)
+
+;; *Exercise 3.22:* Instead of representing a queue as a pair of pointers, we
+;; can build a queue as a procedure with local state.  The local state will
+;; consist of pointers to the beginning and the end of an ordinary list.  Thus,
+;; the `make-queue' procedure will have the form
+
+;;      (define (make-queue)
+;;        (let ((front-ptr ... )
+;;              (rear-ptr ... ))
+;;          <DEFINITIONS OF INTERNAL PROCEDURES>
+;;          (define (dispatch m) ...)
+;;          dispatch))
+
+;; Complete the definition of `make-queue' and provide implementations of the
+;; queue operations using this representation.
+(defun make-queue-2 ()
+  (let ((front-ptr '())
+        (rear-ptr '()))
+    (labels ((emptyp ()
+               (null front-ptr))
+             (front ()
+               (if (emptyp)
+                   (error "FRONT called with an empty queue")
+                   (car front-ptr)))
+             (insert! (item)
+               (let ((new-pair `(,item)))
+                 (cond ((emptyp)
+                        (setf front-ptr new-pair)
+                        (setf rear-ptr new-pair))
+                       (t (set-cdr! rear-ptr new-pair)
+                          (setf rear-ptr new-pair)))))
+             (delete! ()
+               (cond ((emptyp)
+                      (error "DELETE! called with an emtpy queue"))
+                     (t (setf front-ptr (cdr front-ptr)))))
+             (print-queue ()
+               (print front-ptr))
+             (dispatch (m)
+               (cond ((eq m 'emptyp) #'emptyp)
+                     ((eq m 'front) #'front)
+                     ((eq m 'insert!) #'insert!)
+                     ((eq m 'delete!) #'delete!)
+                     ((eq m 'print) #'print-queue)
+                     (t (error "Unkown message" m)))))
+      #'dispatch)))
+
+(defmacro message-passing (object msg &body body)
+    `(funcall (funcall ,object ',msg) ,@body))
+
+(defparameter *q2* (make-queue-2))
+(message-passing *q2* emptyp)
+(message-passing *q2* insert! 'a)
+(message-passing *q2* insert! 'b)
+(message-passing *q2* insert! 'c)
+(message-passing *q2* front)
+(message-passing *q2* delete!)
+(message-passing *q2* delete!)
+(message-passing *q2* delete!)
+(message-passing *q2* print)
+
+;; *Exercise 3.23:* A "deque" ("double-ended queue") is a sequence in which
+;; items can be inserted and deleted at either the front or the rear.
+;; Operations on deques are the constructor `make-deque', the predicate
+;; `empty-deque?', selectors `front-deque' and `rear-deque', and mutators
+;; `front-insert-deque!', `rear-insert-deque!', `front-delete-deque!', and
+;; `rear-delete-deque!'.  Show how to represent deques using pairs, and give
+;; implementations of the operations.(2) All operations should be accomplished
+;; in [theta](1) steps.
