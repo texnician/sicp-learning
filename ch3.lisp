@@ -655,3 +655,100 @@
 (rear-delete-deque! *dq1*)
 (print-deque *dq1*)
 (print-deque-reverse *dq1*)
+
+;; *Exercise 3.28:* Define an or-gate as a primitive function box. Your
+;; *`or-gate' constructor should be similar to `and-gate'.
+
+(defparameter *inverter-delay* nil)
+(defparameter *and-gate-delay* nil)
+(defparameter *or-gate-delay* nil)
+
+(defun inverter (input output)
+  (labels ((invert-input ()
+             (let ((new-value (logical-not (get-signal! input))))
+               (after-delay *inverter-delay* #'(lambda ()
+                                                 (set-signal! output new-value))))))
+    (add-action! input #'invert-input)
+    'ok))
+
+(defun logical-not (sig)
+  (cond ((= sig 0) 1)
+        ((= sig 1) 0)
+        (t (error "Invalid signal" sig))))
+
+(defun and-gate (a1 a2 output)
+  (labels ((and-signal-handler ()
+             (let ((new-value (logical-and (get-signal! a1) (get-signal! a2))))
+               (after-delay *and-gate-delay* #'(lambda ()
+                                                 (set-signal! output new-value))))))
+    (add-action! a1 #'and-signal-handler)
+    (add-action! a2 #'and-signal-handler)
+    'ok))
+
+(defun logical-and (sig1 sig2)
+  (cond ((and (= 1 sig1) (= 1 sig2)) 1)
+        ((and (= 1 sig1) (= 0 sig2)) 0)
+        ((and (= 0 sig1) (= 1 sig2)) 0)
+        ((and (= 0 sig1) (= 0 sig2)) 0)
+        (t (error "Invalid signal" sig1 sig2))))
+
+(defun or-gate (a1 a2 output)
+  (labels ((or-signal-handler ()
+             (let ((new-value (logical-or (get-signal! a1) (get-signal! a2))))
+               (after-delay *or-gate-delay* #'(lambda ()
+                                                (set-signal! output new-value))))))
+    (add-action! a1 #'or-signal-handler)
+    (add-action! a2 #'or-signal-handler)
+    'ok))
+
+(defun logical-or (sig1 sig2)
+  (cond ((and (= 1 sig1) (= 1 sig2)) 1)
+        ((and (= 1 sig1) (= 0 sig2)) 1)
+        ((and (= 0 sig1) (= 1 sig2)) 1)
+        ((and (= 0 sig1) (= 0 sig2)) 0)
+        (t (error "Invalid signal" sig1 sig2))))
+
+;; *Exercise 3.29:* Another way to construct an or-gate is as a compound digital
+;; logic device, built from and-gates and inverters.  Define a procedure
+;; `or-gate' that accomplishes this.  What is the delay time of the or-gate in
+;; terms of `and-gate-delay' and `inverter-delay'?
+
+;;; A*B + A*~B + ~A*B
+(defun or-gate2 (a1 a2 output)
+  (let ((c (make-wire))
+        (d (make-wire)))
+    (and-gate a1 a2 output)
+    (inverter b c)
+    (and-gate a c output)
+    (inverter a d)
+    (and-gate d b output)
+    'ok))
+;;delay =  *and-gate-delay* + *inverter-delay*
+ 
+;; *Exercise 3.30:* *note Figure 3-27:: shows a "ripple-carry adder" formed by
+;; stringing together n full-adders.  This is the simplest form of parallel
+;; adder for adding two n-bit binary numbers.  The inputs A_1, A_2, A_3, ...,
+;; A_n and B_1, B_2, B_3, ..., B_n are the two binary numbers to be added (each
+;; A_k and B_k is a 0 or a 1).  The circuit generates S_1, S_2, S_3, ..., S_n,
+;; the n bits of the sum, and C, the carry from the addition.  Write a procedure
+;; `ripple-carry-adder' that generates this circuit.  The procedure should take
+;; as arguments three lists of n wires each--the A_k, the B_k, and the S_k--and
+;; also another wire C.  The major drawback of the ripple-carry adder is the
+;; need to wait for the carry signals to propagate.  What is the delay needed to
+;; obtain the complete output from an n-bit ripple-carry adder, expressed in
+;; terms of the delays for and-gates, or-gates, and inverters?
+
+;; *Figure 3.27:* A ripple-carry adder for n-bit numbers.
+
+;;         :                                              :   :
+;;         : A_1 B_1   C_1   A_2 B_2   C_2   A_3 B_3   C_3:   : A_n B_n C_n=0
+;;         :  |   |   +---+   |   |   +---+   |   |   +-----  :  |   |   +-
+;;         |  |   |   |   |   |   |   |   |   |   |   |   :   :  |   |   |
+;;         : ++---+---++  |  ++---+---++  |  ++---+---++  :   : ++---+---++
+;;         : |   FA    |  |  |   FA    |  |  |   FA    |  :   : |   FA    |
+;;         : +--+---+--+  |  +--+---+--+  |  +--+---+--+  :   : +--+---+--+
+;;         :    |   |     |     |   |     |     |   |     :   :    |   |
+;;      C ------+   |     +-----+   |     +-----+   |     :  ------+   |
+;;         :        |       C_1     |       C_2     |     :   : C_(n-1)|
+;;         :        |               |               |     :   :        |
+;;                 S_1             S_2             S_3                S_n
