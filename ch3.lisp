@@ -844,7 +844,7 @@
 
 (defun segment-queue (s) (cdr s))
 
-(defun make-agenda () '(0))
+(defun make-agenda () (list 0))
 
 (defun current-time (agenda)
   (car agenda))
@@ -928,6 +928,6 @@
 (probe 'sum *sum-wire*)
 (probe 'carry-out *carry-out*)
 (half-adder *input-1* *input-2* *sum-wire* *carry-out*)
-(set-signal! *input-1* 1)
+(set-signal! *input-1* 0)
 (propagate)
 (set-signal! *input-2* 1)
