@@ -742,7 +742,9 @@
 
 (defun miller-rabin-test (n)
   (labels ((try-it (x)
-             (eq (expmod1 x (1- n) n) 1)))
+             (if (eq 0 x)
+                 t
+                 (eq (expmod1 x (1- n) n) 1))))
     (try-it (random n))))
 
 (defun miller-rabin-primep (n &optional (times 10))
